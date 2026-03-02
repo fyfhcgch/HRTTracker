@@ -282,33 +282,28 @@ private fun ConcentrationLevelGuide() {
             )
             
             ConcentrationLevelItem(
-                level = "偏低",
-                range = "< 50 pg/mL",
+                level = "低于参考范围",
+                range = "< 30 pg/mL",
                 color = MaterialTheme.colorScheme.error
             )
             ConcentrationLevelItem(
-                level = "正常下限",
-                range = "50-100 pg/mL",
+                level = "女性卵泡期",
+                range = "30-70 pg/mL",
                 color = MaterialTheme.colorScheme.tertiary
             )
             ConcentrationLevelItem(
-                level = "正常",
+                level = "女性黄体期",
+                range = "70-300 pg/mL",
+                color = MaterialTheme.colorScheme.secondary
+            )
+            ConcentrationLevelItem(
+                level = "非针剂女性向 GAHT 目标",
                 range = "100-200 pg/mL",
                 color = MaterialTheme.colorScheme.primary
             )
             ConcentrationLevelItem(
-                level = "正常上限",
-                range = "200-300 pg/mL",
-                color = MaterialTheme.colorScheme.secondary
-            )
-            ConcentrationLevelItem(
-                level = "偏高",
-                range = "300-400 pg/mL",
-                color = MaterialTheme.colorScheme.tertiary
-            )
-            ConcentrationLevelItem(
-                level = "超高",
-                range = "> 400 pg/mL",
+                level = "高于参考范围",
+                range = "> 300 pg/mL",
                 color = MaterialTheme.colorScheme.error
             )
         }
