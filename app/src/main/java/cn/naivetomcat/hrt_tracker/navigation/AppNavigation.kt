@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -20,13 +23,18 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cn.naivetomcat.hrt_tracker.ui.screens.HomeScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.MedicationRecordsScreen
+import cn.naivetomcat.hrt_tracker.ui.screens.SettingsScreen
 import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
+import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
 
 /**
  * 应用主导航
  */
 @Composable
-fun AppNavigation(viewModel: HRTViewModel) {
+fun AppNavigation(
+    hrtViewModel: HRTViewModel,
+    settingsViewModel: SettingsViewModel
+) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -40,10 +48,19 @@ fun AppNavigation(viewModel: HRTViewModel) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.HOME.route) {
-                HomeScreen(viewModel = viewModel)
+                HomeScreen(viewModel = hrtViewModel)
             }
             composable(Screen.RECORDS.route) {
-                MedicationRecordsScreen(viewModel = viewModel)
+                MedicationRecordsScreen(viewModel = hrtViewModel)
+            }
+            composable(Screen.SETTINGS.route) {
+                val settings by settingsViewModel.userSettings.collectAsState()
+                SettingsScreen(
+                    settings = settings,
+                    onBodyWeightChange = settingsViewModel::updateBodyWeight,
+                    onThemeModeChange = settingsViewModel::updateThemeMode,
+                    onColorThemeChange = settingsViewModel::updateColorTheme
+                )
             }
         }
     }
@@ -66,6 +83,12 @@ private fun BottomNavigationBar(navController: NavHostController) {
             selectedIcon = Icons.Filled.List,
             unselectedIcon = Icons.Outlined.List,
             label = "记录"
+        ),
+        BottomNavItem(
+            screen = Screen.SETTINGS,
+            selectedIcon = Icons.Filled.Settings,
+            unselectedIcon = Icons.Outlined.Settings,
+            label = "设置"
         )
     )
 

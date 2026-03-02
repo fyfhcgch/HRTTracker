@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.data.ThemeMode
 import cn.naivetomcat.hrt_tracker.pk.DoseEvent
 import cn.naivetomcat.hrt_tracker.pk.Ester
 import cn.naivetomcat.hrt_tracker.pk.Route
@@ -268,7 +270,45 @@ private fun PreviewMedicationRecordsScreenWithData() {
 @Preview(name = "深色模式", showBackground = true, showSystemUi = true)
 @Composable
 private fun PreviewMedicationRecordsScreenDark() {
-    HRTTrackerTheme(darkTheme = true) {
+    HRTTrackerTheme(themeMode = ThemeMode.DARK) {
+        val currentTime = System.currentTimeMillis() / 3600000.0
+        val events = remember {
+            listOf(
+                DoseEvent(
+                    route = Route.INJECTION,
+                    timeH = currentTime - 168.0,
+                    doseMG = 5.0,
+                    ester = Ester.EV
+                ),
+                DoseEvent(
+                    route = Route.ORAL,
+                    timeH = currentTime - 12.0,
+                    doseMG = 2.0,
+                    ester = Ester.E2
+                ),
+                DoseEvent(
+                    route = Route.SUBLINGUAL,
+                    timeH = currentTime - 2.0,
+                    doseMG = 1.0,
+                    ester = Ester.E2
+                )
+            )
+        }
+
+        MedicationRecordsScreenContent(
+            events = events,
+            onEventClick = {},
+            onAddClick = {}
+        )
+    }
+}
+
+@Preview(name = "系统浅色", showSystemUi = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "系统深色", showSystemUi = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "系统浅色绿色壁纸", showSystemUi = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_NO, wallpaper = Wallpapers.GREEN_DOMINATED_EXAMPLE)
+@Composable
+private fun PreviewMedicationRecordsScreenSystem() {
+    HRTTrackerTheme() {
         val currentTime = System.currentTimeMillis() / 3600000.0
         val events = remember {
             listOf(
