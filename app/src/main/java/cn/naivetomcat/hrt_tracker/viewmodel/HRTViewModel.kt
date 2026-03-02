@@ -4,11 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import cn.naivetomcat.hrt_tracker.data.DoseEventRepository
+import cn.naivetomcat.hrt_tracker.data.MedicationPlanRepository
 import cn.naivetomcat.hrt_tracker.pk.DoseEvent
 import cn.naivetomcat.hrt_tracker.pk.Route
 import cn.naivetomcat.hrt_tracker.pk.SimulationEngine
+import cn.naivetomcat.hrt_tracker.utils.MedicationPlanPredictor
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 /**
@@ -17,6 +22,7 @@ import java.util.UUID
  */
 class HRTViewModel(
     private val repository: DoseEventRepository,
+    private val medicationPlanRepository: MedicationPlanRepository,
     private val bodyWeightKG: Double = 55.0 // 默认体重，后续可以从用户设置中获取
 ) : ViewModel() {
 
@@ -28,15 +34,42 @@ class HRTViewModel(
             initialValue = emptyList()
         )
 
+    // 启用的用药计划列表
+    val enabledPlans: StateFlow<List<cn.naivetomcat.hrt_tracker.data.MedicationPlan>> = medicationPlanRepository.getEnabledPlans()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     // PK 状态
     private val _pkState = MutableStateFlow(PKState())
     val pkState: StateFlow<PKState> = _pkState.asStateFlow()
+
+    // 实时当前时刻流（每秒更新一次）
+    val currentTimeH: StateFlow<Double> = flow {
+        while (true) {
+            emit(System.currentTimeMillis() / 3600000.0)
+            delay(1000) // 每秒更新一次
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = System.currentTimeMillis() / 3600000.0
+    )
 
     init {
         // 监听事件变化，自动重新运行模拟
         viewModelScope.launch {
             events.collect { eventList ->
                 // 无论列表是否为空，都运行模拟以更新状态
+                runSimulation()
+            }
+        }
+        
+        // 监听用药方案变化，自动重新运行模拟
+        viewModelScope.launch {
+            medicationPlanRepository.getEnabledPlans().collect {
                 runSimulation()
             }
         }
@@ -70,13 +103,29 @@ class HRTViewModel(
 
                 val currentTimeH = System.currentTimeMillis() / 3600000.0
                 
-                // 获取用于模拟的事件
-                val simulationEvents = repository.getEventsForSimulation(currentTimeH)
+                // 获取历史用药事件
+                val historicalEvents = repository.getEventsForSimulation(currentTimeH)
                 
-                if (simulationEvents.isEmpty()) {
+                // 获取启用的用药方案
+                val enabledPlans = medicationPlanRepository.getEnabledPlans().first()
+                
+                // 根据用药方案生成未来15天的预测事件
+                val futureEvents = if (enabledPlans.isNotEmpty()) {
+                    val now = LocalDateTime.now()
+                    MedicationPlanPredictor.generateFutureEventsForPlans(
+                        plans = enabledPlans,
+                        fromDateTime = now,
+                        daysAhead = 15
+                    )
+                } else {
+                    emptyList()
+                }
+                
+                if (historicalEvents.isEmpty() && futureEvents.isEmpty()) {
                     _pkState.update {
                         it.copy(
                             simulationResult = null,
+                            baselineSimulationResult = null,
                             currentConcentration = null,
                             isSimulating = false,
                             currentTimeH = currentTimeH
@@ -85,7 +134,7 @@ class HRTViewModel(
                     return@launch
                 }
 
-                // 计算时间范围：当前时刻向后15天
+                // 计算时间范围：当前时刻往前15天到往后15天
                 val startTimeH = currentTimeH - 24.0 * 15  // 当前时刻往前15天
                 val endTimeH = currentTimeH + 24.0 * 15    // 当前时刻往后15天
 
@@ -94,23 +143,43 @@ class HRTViewModel(
                 val stepsNeeded = (totalHours * 4).toInt() // 15分钟 = 0.25小时，所以每小时4步
                 val numberOfSteps = maxOf(stepsNeeded, 1000) // 至少1000步
 
-                // 运行模拟
-                val engine = SimulationEngine(
-                    events = simulationEvents,
-                    bodyWeightKG = bodyWeightKG,
-                    startTimeH = startTimeH,
-                    endTimeH = endTimeH,
-                    numberOfSteps = numberOfSteps
-                )
-
-                val result = engine.run()
+                // 运行基线仿真（仅历史事件，不考虑未来计划）
+                val baselineResult = if (historicalEvents.isNotEmpty()) {
+                    val baselineEngine = SimulationEngine(
+                        events = historicalEvents,
+                        bodyWeightKG = bodyWeightKG,
+                        startTimeH = startTimeH,
+                        endTimeH = endTimeH,
+                        numberOfSteps = numberOfSteps
+                    )
+                    baselineEngine.run()
+                } else {
+                    null
+                }
                 
-                // 计算当前时刻的浓度
-                val currentConc = result.concentration(currentTimeH)
+                // 运行完整仿真（历史事件 + 未来计划）
+                val allEvents = historicalEvents + futureEvents
+                val fullResult = if (allEvents.isNotEmpty()) {
+                    val fullEngine = SimulationEngine(
+                        events = allEvents,
+                        bodyWeightKG = bodyWeightKG,
+                        startTimeH = startTimeH,
+                        endTimeH = endTimeH,
+                        numberOfSteps = numberOfSteps
+                    )
+                    fullEngine.run()
+                } else {
+                    null
+                }
+                
+                // 计算当前时刻的浓度（使用完整仿真结果）
+                val currentConc = fullResult?.concentration(currentTimeH) 
+                    ?: baselineResult?.concentration(currentTimeH)
 
                 _pkState.update {
                     it.copy(
-                        simulationResult = result,
+                        simulationResult = fullResult,
+                        baselineSimulationResult = baselineResult,
                         currentConcentration = currentConc,
                         currentTimeH = currentTimeH,
                         isSimulating = false
@@ -133,12 +202,13 @@ class HRTViewModel(
  */
 class HRTViewModelFactory(
     private val repository: DoseEventRepository,
+    private val medicationPlanRepository: MedicationPlanRepository,
     private val bodyWeightKG: Double = 65.0
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HRTViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return HRTViewModel(repository, bodyWeightKG) as T
+            return HRTViewModel(repository, medicationPlanRepository, bodyWeightKG) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

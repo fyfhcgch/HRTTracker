@@ -114,7 +114,7 @@ private fun MedicationRecordsScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("用药记录") },
+                title = { Text("用药记录", style = MaterialTheme.typography.headlineMediumEmphasized) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer

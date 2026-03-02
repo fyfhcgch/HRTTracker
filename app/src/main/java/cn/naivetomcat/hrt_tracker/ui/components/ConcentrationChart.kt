@@ -43,17 +43,22 @@ import androidx.compose.ui.platform.LocalLocale
  * - 支持手势缩放和拖动
  * - 显示坐标轴和网格线
  * - 标记给药时间点和当前时刻
+ * - 同时显示基线曲线（无计划）和计划曲线（有计划）
  *
- * @param simulationResult 模拟结果
+ * @param simulationResult 完整模拟结果（历史+未来计划）
+ * @param baselineSimulationResult 基线模拟结果（仅历史，不考虑未来计划）
  * @param currentTimeH 当前时刻（小时）
  * @param doseTimePoints 给药时间点列表（小时）
+ * @param forkPointTimeH 分叉点时间（未来第一次计划用药时间），此时刻后主曲线转为计划曲线
  * @param modifier Modifier
  */
 @Composable
 fun ConcentrationChart(
     simulationResult: SimulationResult,
+    baselineSimulationResult: SimulationResult?,
     currentTimeH: Double,
     doseTimePoints: List<Double>,
+    forkPointTimeH: Double? = null,
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -88,8 +93,8 @@ fun ConcentrationChart(
     var offsetX by remember { mutableFloatStateOf(0f) }
     var isInitialized by remember { mutableStateOf(false) }
     
-    // 当数据改变时重置初始化状态
-    LaunchedEffect(simulationResult, currentTimeH) {
+    // 仅当模拟结果改变时重置初始化状态（不包括 currentTimeH 变化）
+    LaunchedEffect(simulationResult) {
         scaleX = initialScale
         offsetX = 0f
         isInitialized = false
@@ -251,25 +256,143 @@ fun ConcentrationChart(
             right = chartRight,
             bottom = chartBottom
         ) {
-            // 绘制浓度曲线（应用缩放和平移）
-            val path = Path()
-            simulationResult.timeH.forEachIndexed { index, time ->
-                val conc = simulationResult.concPGmL[index]
-                val normalizedTime = ((time - timeMin) / (timeMax - timeMin)).toFloat()
-                val x = chartLeft + normalizedTime * chartWidth * scaleX + offsetX
-                val y = chartBottom - chartHeight * ((conc - concMin) / (concMax - concMin)).toFloat()
+            // 确定分叉点时间（优先使用传入的 forkPointTimeH，否则使用当前时刻）
+            val forkTime = forkPointTimeH ?: currentTimeH
+            
+            // 计算分叉点处的浓度值（线性插值）
+            var forkPointConc = 0.0
+            var forkPointFound = false
+            for (i in 0 until simulationResult.timeH.size - 1) {
+                val time1 = simulationResult.timeH[i]
+                val time2 = simulationResult.timeH[i + 1]
                 
-                if (index == 0) {
-                    path.moveTo(x, y)
+                if (time1 <= forkTime && time2 >= forkTime) {
+                    // 线性插值计算分叉点处的浓度
+                    val conc1 = simulationResult.concPGmL[i]
+                    val conc2 = simulationResult.concPGmL[i + 1]
+                    val ratio = if (time2 != time1) (forkTime - time1) / (time2 - time1) else 0.0
+                    forkPointConc = conc1 + (conc2 - conc1) * ratio
+                    forkPointFound = true
+                    break
+                }
+            }
+            
+            // 如果没找到插值点，使用最近的点
+            if (!forkPointFound) {
+                simulationResult.timeH.forEachIndexed { index, time ->
+                    if ((index == 0 || abs(time - forkTime) < abs(simulationResult.timeH[index - 1] - forkTime)) &&
+                        index < simulationResult.concPGmL.size) {
+                        forkPointConc = simulationResult.concPGmL[index]
+                    }
+                }
+            }
+            
+            // 计算分叉点的屏幕坐标
+            val forkNormalizedTime = ((forkTime - timeMin) / (timeMax - timeMin)).toFloat()
+            val forkScreenX = chartLeft + forkNormalizedTime * chartWidth * scaleX + offsetX
+            val forkScreenY = chartBottom - chartHeight * ((forkPointConc - concMin) / (concMax - concMin)).toFloat()
+            
+            // 绘制基线曲线（分叉点之后未用药）- primary虚线
+            baselineSimulationResult?.let { baseline ->
+                val baselinePath = Path()
+                var isFirst = true
+                baseline.timeH.forEachIndexed { index, time ->
+                    // 只绘制分叉点之后的部分
+                    if (time >= forkTime) {
+                        val conc = baseline.concPGmL[index]
+                        val normalizedTime = ((time - timeMin) / (timeMax - timeMin)).toFloat()
+                        val x = chartLeft + normalizedTime * chartWidth * scaleX + offsetX
+                        val y = chartBottom - chartHeight * ((conc - concMin) / (concMax - concMin)).toFloat()
+                        
+                        if (isFirst) {
+                            // 从分叉点开始
+                            baselinePath.moveTo(forkScreenX, forkScreenY)
+                            baselinePath.lineTo(x, y)
+                            isFirst = false
+                        } else {
+                            baselinePath.lineTo(x, y)
+                        }
+                    }
+                }
+                
+                // 绘制基线未来曲线（使用 primary color 50% 不透明实线）
+                drawPath(
+                    path = baselinePath,
+                    color = primaryColor.copy(alpha = 0.5f),
+                    style = Stroke(
+                        width = 2.5.dp.toPx()
+                    )
+                )
+            }
+            
+            // 绘制主曲线 - 分段绘制（分叉点前后使用不同颜色）
+            // 1. 分叉点之前的部分（历史 + 第一次未来用药之前）- primary实线
+            val pathBefore = Path()
+            var hasMovedBefore = false
+            simulationResult.timeH.forEachIndexed { index, time ->
+                if (time < forkTime) {  // 严格小于分叉点时间
+                    val conc = simulationResult.concPGmL[index]
+                    val normalizedTime = ((time - timeMin) / (timeMax - timeMin)).toFloat()
+                    val x = chartLeft + normalizedTime * chartWidth * scaleX + offsetX
+                    val y = chartBottom - chartHeight * ((conc - concMin) / (concMax - concMin)).toFloat()
+                    
+                    if (!hasMovedBefore) {
+                        pathBefore.moveTo(x, y)
+                        hasMovedBefore = true
+                    } else {
+                        pathBefore.lineTo(x, y)
+                    }
+                }
+            }
+            
+            // 线段延伸到分叉点
+            if (forkTime > timeMin && forkTime < timeMax) {
+                if (hasMovedBefore) {
+                    pathBefore.lineTo(forkScreenX, forkScreenY)
                 } else {
-                    path.lineTo(x, y)
+                    // 如果没有数据点在分叉点之前，从分叉点开始
+                    pathBefore.moveTo(forkScreenX, forkScreenY)
                 }
             }
             
             drawPath(
-                path = path,
+                path = pathBefore,
                 color = primaryColor,
                 style = Stroke(width = 2.5.dp.toPx())
+            )
+            
+            // 2. 分叉点之后的部分（按计划用药）- tertiary虚线
+            val pathAfter = Path()
+            var startedAfter = false
+            
+            // 首先从分叉点开始
+            if (forkTime > timeMin && forkTime < timeMax) {
+                pathAfter.moveTo(forkScreenX, forkScreenY)
+                startedAfter = true
+            }
+            
+            simulationResult.timeH.forEachIndexed { index, time ->
+                if (time > forkTime) {  // 严格大于分叉点时间
+                    val conc = simulationResult.concPGmL[index]
+                    val normalizedTime = ((time - timeMin) / (timeMax - timeMin)).toFloat()
+                    val x = chartLeft + normalizedTime * chartWidth * scaleX + offsetX
+                    val y = chartBottom - chartHeight * ((conc - concMin) / (concMax - concMin)).toFloat()
+                    
+                    if (!startedAfter) {
+                        pathAfter.moveTo(x, y)
+                        startedAfter = true
+                    } else {
+                        pathAfter.lineTo(x, y)
+                    }
+                }
+            }
+            
+            drawPath(
+                path = pathAfter,
+                color = tertiaryColor.copy(alpha = 0.5f),
+                style = Stroke(
+                    width = 2.5.dp.toPx()
+                )
             )
 
             // 标记给药时间点（应用缩放和平移）
@@ -279,11 +402,10 @@ fun ConcentrationChart(
                     val x = chartLeft + normalizedTime * chartWidth * scaleX + offsetX
                     if (x >= chartLeft && x <= chartRight) {
                         drawLine(
-                            color = errorColor.copy(alpha = 0.7f),
+                            color = errorColor.copy(alpha = 0.5f),
                             start = Offset(x, chartTop),
                             end = Offset(x, chartBottom),
-                            strokeWidth = 2.5.dp.toPx(),
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 5f))
+                            strokeWidth = 2.5.dp.toPx()
                         )
                     }
                 }

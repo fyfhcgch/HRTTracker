@@ -1,19 +1,37 @@
 package cn.naivetomcat.hrt_tracker.navigation
 
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -22,9 +40,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cn.naivetomcat.hrt_tracker.ui.screens.HomeScreen
+import cn.naivetomcat.hrt_tracker.ui.screens.MedicationPlansScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.MedicationRecordsScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.SettingsScreen
 import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
+import cn.naivetomcat.hrt_tracker.viewmodel.MedicationPlanViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
 
 /**
@@ -33,10 +53,11 @@ import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
 @Composable
 fun AppNavigation(
     hrtViewModel: HRTViewModel,
-    settingsViewModel: SettingsViewModel
+    settingsViewModel: SettingsViewModel,
+    medicationPlanViewModel: MedicationPlanViewModel
 ) {
     val navController = rememberNavController()
-
+    val density = LocalDensity.current
     Scaffold(
         bottomBar = {
             BottomNavigationBar(navController = navController)
@@ -45,13 +66,30 @@ fun AppNavigation(
         NavHost(
             navController = navController,
             startDestination = Screen.HOME.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = {
+                slideInHorizontally() + expandHorizontally(
+                    // Expand from the right.
+                    expandFrom = Alignment.Start
+                ) + fadeIn(
+                    // Fade in with the initial alpha of 0.3f.
+                    initialAlpha = 0.3f
+                ) },
+            exitTransition = {
+                slideOutHorizontally() + shrinkHorizontally(
+                    // Shrink towards the right
+                    shrinkTowards = Alignment.End
+                ) + fadeOut()
+             },
         ) {
             composable(Screen.HOME.route) {
                 HomeScreen(viewModel = hrtViewModel)
             }
             composable(Screen.RECORDS.route) {
                 MedicationRecordsScreen(viewModel = hrtViewModel)
+            }
+            composable(Screen.MEDICATION_PLANS.route) {
+                MedicationPlansScreen(viewModel = medicationPlanViewModel)
             }
             composable(Screen.SETTINGS.route) {
                 val settings by settingsViewModel.userSettings.collectAsState()
@@ -83,6 +121,12 @@ private fun BottomNavigationBar(navController: NavHostController) {
             selectedIcon = Icons.Filled.List,
             unselectedIcon = Icons.Outlined.List,
             label = "记录"
+        ),
+        BottomNavItem(
+            screen = Screen.MEDICATION_PLANS,
+            selectedIcon = Icons.Filled.MedicalServices,
+            unselectedIcon = Icons.Outlined.MedicalServices,
+            label = "方案"
         ),
         BottomNavItem(
             screen = Screen.SETTINGS,

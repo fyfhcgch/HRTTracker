@@ -6,7 +6,8 @@ import cn.naivetomcat.hrt_tracker.pk.SimulationResult
  * 药代动力学UI状态
  */
 data class PKState(
-    val simulationResult: SimulationResult? = null,
+    val simulationResult: SimulationResult? = null, // 完整的仿真结果（历史+未来计划）
+    val baselineSimulationResult: SimulationResult? = null, // 基线仿真结果（仅历史，不考虑未来计划）
     val currentTimeH: Double = System.currentTimeMillis() / 3600000.0,
     val currentConcentration: Double? = null,
     val isSimulating: Boolean = false,
@@ -21,7 +22,7 @@ data class PKState(
         // 浓度判定优先级顺序（参考Oyama项目）
         return when {
             currentConcentration > 300 -> "高于参考范围"
-            currentConcentration >= 100 && currentConcentration <= 200 -> "非针剂女性向 GAHT 目标"
+            currentConcentration >= 100 && currentConcentration <= 200 -> "GAHT 目标"
             currentConcentration >= 70 && currentConcentration <= 300 -> "女性黄体期"
             currentConcentration >= 30 && currentConcentration < 70 -> "女性卵泡期"
             else -> "低于参考范围"

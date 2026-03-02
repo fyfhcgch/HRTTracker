@@ -26,7 +26,7 @@ import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
 /**
  * 设置页面
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
     settings: UserSettings,
@@ -37,7 +37,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("设置") },
+                title = { Text("设置", style = MaterialTheme.typography.headlineMediumEmphasized) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -146,7 +146,8 @@ private fun ThemeModeSection(
         )
         
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             ThemeMode.entries.forEachIndexed { index, mode ->
                 val label = when (mode) {
@@ -192,6 +193,7 @@ private fun ThemeModeSection(
                 ) {
                     Text(label)
                 }
+
             }
         }
     }
@@ -217,7 +219,8 @@ private fun ColorThemeSection(
         )
         
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             ColorTheme.entries.forEachIndexed { index, theme ->
                 val label = when (theme) {

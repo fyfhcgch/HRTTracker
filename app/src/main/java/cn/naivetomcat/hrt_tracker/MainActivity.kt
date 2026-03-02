@@ -9,11 +9,15 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.naivetomcat.hrt_tracker.data.AppDatabase
 import cn.naivetomcat.hrt_tracker.data.DoseEventRepository
+import cn.naivetomcat.hrt_tracker.data.MedicationPlanRepository
 import cn.naivetomcat.hrt_tracker.data.SettingsDataStore
 import cn.naivetomcat.hrt_tracker.navigation.AppNavigation
+import cn.naivetomcat.hrt_tracker.reminder.ReminderManager
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
 import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModelFactory
+import cn.naivetomcat.hrt_tracker.viewmodel.MedicationPlanViewModel
+import cn.naivetomcat.hrt_tracker.viewmodel.MedicationPlanViewModelFactory
 import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModelFactory
 
@@ -24,7 +28,8 @@ class MainActivity : ComponentActivity() {
         
         // 初始化数据库和仓库
         val database = AppDatabase.getDatabase(applicationContext)
-        val repository = DoseEventRepository(database.doseEventDao())
+        val doseEventRepository = DoseEventRepository(database.doseEventDao())
+        val medicationPlanRepository = MedicationPlanRepository(database.medicationPlanDao())
         
         // 初始化设置数据存储
         val settingsDataStore = SettingsDataStore(applicationContext)
@@ -46,15 +51,26 @@ class MainActivity : ComponentActivity() {
                 // 创建 HRTViewModel，使用用户设置的体重
                 val hrtViewModel: HRTViewModel = viewModel(
                     factory = HRTViewModelFactory(
-                        repository = repository,
+                        repository = doseEventRepository,
+                        medicationPlanRepository = medicationPlanRepository,
                         bodyWeightKG = userSettings.bodyWeight
                     )
                 )
                 
+                // 创建 MedicationPlanViewModel
+                val reminderManager = ReminderManager(applicationContext)
+                val medicationPlanViewModel: MedicationPlanViewModel = viewModel(
+                    factory = MedicationPlanViewModelFactory(medicationPlanRepository, reminderManager)
+                )
+                
+                // 应用启动时重新设置所有提醒
+                medicationPlanViewModel.rescheduleAllReminders()
+                
                 // 使用导航
                 AppNavigation(
                     hrtViewModel = hrtViewModel,
-                    settingsViewModel = settingsViewModel
+                    settingsViewModel = settingsViewModel,
+                    medicationPlanViewModel = medicationPlanViewModel
                 )
             }
         }

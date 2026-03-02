@@ -32,4 +32,32 @@ class Converters {
             Json.decodeFromString(value)
         }
     }
+
+    @TypeConverter
+    fun fromStringList(list: List<String>): String {
+        return Json.encodeToString(list)
+    }
+
+    @TypeConverter
+    fun toStringList(value: String): List<String> {
+        return if (value.isEmpty()) {
+            emptyList()
+        } else {
+            Json.decodeFromString(value)
+        }
+    }
+
+    @TypeConverter
+    fun fromIntSet(set: Set<Int>): String {
+        return Json.encodeToString(set)
+    }
+
+    @TypeConverter
+    fun toIntSet(value: String): Set<Int> {
+        return if (value.isEmpty()) {
+            emptySet()
+        } else {
+            Json.decodeFromString(value)
+        }
+    }
 }

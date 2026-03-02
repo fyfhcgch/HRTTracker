@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
@@ -16,12 +17,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.data.MedicationPlan
 import cn.naivetomcat.hrt_tracker.pk.SimulationResult
 import cn.naivetomcat.hrt_tracker.ui.components.ConcentrationChart
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
+import cn.naivetomcat.hrt_tracker.utils.MedicationPlanPredictor
 import cn.naivetomcat.hrt_tracker.viewmodel.ConcentrationLevel
 import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.PKState
+import java.time.LocalDateTime
+import kotlin.math.abs
 
 /**
  * 主页屏幕
@@ -35,10 +40,14 @@ fun HomeScreen(
 ) {
     val pkState by viewModel.pkState.collectAsState()
     val events by viewModel.events.collectAsState()
+    val enabledPlans by viewModel.enabledPlans.collectAsState()
+    val realtimeCurrentTimeH by viewModel.currentTimeH.collectAsState()
 
     HomeScreenContent(
         pkState = pkState,
         doseTimePoints = events.map { it.timeH },
+        enabledPlans = enabledPlans,
+        realtimeCurrentTimeH = realtimeCurrentTimeH,
         onRefresh = { viewModel.runSimulation() },
         modifier = modifier
     )
@@ -47,18 +56,48 @@ fun HomeScreen(
 /**
  * 主页屏幕内容（无状态）
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HomeScreenContent(
     pkState: PKState,
     doseTimePoints: List<Double>,
+    enabledPlans: List<MedicationPlan>,
+    realtimeCurrentTimeH: Double,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // 计算分叉点时间：未来第一次计划用药的时间
+    val forkPointTimeH = if (enabledPlans.isNotEmpty()) {
+        val now = LocalDateTime.now()
+        val nextEvents = MedicationPlanPredictor.generateFutureEventsForPlans(
+            plans = enabledPlans,
+            fromDateTime = now,
+            daysAhead = 7  // 检查接下来的7天，确保能找到周期性计划的下一次事件
+        )
+        nextEvents.minOfOrNull { it.timeH }
+    } else {
+        null
+    }
+
+    // 计算实时当前浓度值（通过线性插值）
+    val realtimeCurrentConcentration = if (pkState.simulationResult != null) {
+        calculateConcentrationAtTime(pkState.simulationResult!!, realtimeCurrentTimeH)
+    } else {
+        null
+    }
+
+    // 检查是否需要重新运行模拟
+    // 当且仅当当前时刻晚于下一次计划用药时，触发重新模拟
+    LaunchedEffect(realtimeCurrentTimeH, forkPointTimeH) {
+        if (forkPointTimeH != null && realtimeCurrentTimeH >= forkPointTimeH && 
+            realtimeCurrentTimeH - forkPointTimeH < 1.0 / 3600.0) { // 晚于分叉点不超过1秒，避免频繁刷新
+            onRefresh()
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("雌二醇血药浓度") },
+                title = { Text("雌二醇血药浓度", style = MaterialTheme.typography.headlineMediumEmphasized) },
                 actions = {
                     IconButton(onClick = onRefresh) {
                         Icon(
@@ -160,17 +199,25 @@ private fun HomeScreenContent(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // 当前浓度卡片
-                    CurrentConcentrationCard(pkState = pkState)
+                    CurrentConcentrationCard(
+                        concentration = realtimeCurrentConcentration,
+                        pkState = pkState
+                    )
 
                     // 图表卡片
                     ChartCard(
                         simulationResult = pkState.simulationResult!!,
-                        currentTimeH = pkState.currentTimeH,
-                        doseTimePoints = doseTimePoints
+                        baselineSimulationResult = pkState.baselineSimulationResult,
+                        currentTimeH = realtimeCurrentTimeH,
+                        doseTimePoints = doseTimePoints,
+                        forkPointTimeH = forkPointTimeH
                     )
 
                     // 浓度等级说明
                     ConcentrationLevelGuide()
+
+                    // 曲线说明
+                    CurveExplanationGuide()
                 }
             }
         }
@@ -181,11 +228,17 @@ private fun HomeScreenContent(
  * 当前浓度卡片
  */
 @Composable
-private fun CurrentConcentrationCard(pkState: PKState) {
+private fun CurrentConcentrationCard(
+    concentration: Double?,
+    pkState: PKState
+) {
+    // 根据当前浓度值创建临时的 PKState 用于颜色判断
+    val tempPkState = pkState.copy(currentConcentration = concentration)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = when (pkState.getConcentrationLevelColor()) {
+            containerColor = when (tempPkState.getConcentrationLevelColor()) {
                 ConcentrationLevel.LOW -> MaterialTheme.colorScheme.errorContainer  // 低于参考范围（琥珀色）
                 ConcentrationLevel.FOLLICULAR -> MaterialTheme.colorScheme.tertiaryContainer  // 女性卵泡期（靛蓝色）
                 ConcentrationLevel.LUTEAL -> MaterialTheme.colorScheme.secondaryContainer  // 女性黄体期（蓝色）
@@ -209,8 +262,8 @@ private fun CurrentConcentrationCard(pkState: PKState) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = if (pkState.currentConcentration != null) {
-                        "%.1f pg/mL".format(pkState.currentConcentration)
+                    text = if (concentration != null) {
+                        "%.1f pg/mL".format(concentration)
                     } else {
                         "-- pg/mL"
                     },
@@ -219,7 +272,7 @@ private fun CurrentConcentrationCard(pkState: PKState) {
                 )
                 
                 Text(
-                    text = pkState.getConcentrationLevel() ?: "--",
+                    text = tempPkState.getConcentrationLevel() ?: "--",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -234,8 +287,10 @@ private fun CurrentConcentrationCard(pkState: PKState) {
 @Composable
 private fun ChartCard(
     simulationResult: SimulationResult,
+    baselineSimulationResult: SimulationResult?,
     currentTimeH: Double,
-    doseTimePoints: List<Double>
+    doseTimePoints: List<Double>,
+    forkPointTimeH: Double? = null
 ) {
     Card(
         modifier = Modifier
@@ -253,8 +308,10 @@ private fun ChartCard(
             
             ConcentrationChart(
                 simulationResult = simulationResult,
+                baselineSimulationResult = baselineSimulationResult,
                 currentTimeH = currentTimeH,
                 doseTimePoints = doseTimePoints,
+                forkPointTimeH = forkPointTimeH,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -311,6 +368,90 @@ private fun ConcentrationLevelGuide() {
 }
 
 /**
+ * 曲线说明（解释历史曲线和预测曲线）
+ */
+@Composable
+private fun CurveExplanationGuide() {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "曲线说明",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            
+            // 历史数据和早期预测
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(20.dp)
+                        .height(3.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(1.5.dp)
+                        )
+                )
+                Text(
+                    text = "历史数据和早期预测（到第一次计划用药）",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            
+            // 无计划的未来预测
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(20.dp)
+                        .height(3.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(1.5.dp)
+                        )
+                )
+                Text(
+                    text = "无计划预测（50%透明，不按方案沿自然衰减）",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            
+            // 基于用药方案的预测
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(20.dp)
+                        .height(3.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(1.5.dp)
+                        )
+                )
+                Text(
+                    text = "按计划预测（50%透明，未来第一次计划用药后）",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
+}
+
+/**
  * 浓度等级项
  */
 @Composable
@@ -355,9 +496,12 @@ private fun ConcentrationLevelItem(
 @Composable
 private fun PreviewHomeScreenEmpty() {
     HRTTrackerTheme {
+        val currentTimeH = System.currentTimeMillis() / 3600000.0
         HomeScreenContent(
             pkState = PKState(),
             doseTimePoints = emptyList(),
+            enabledPlans = emptyList(),
+            realtimeCurrentTimeH = currentTimeH,
             onRefresh = {}
         )
     }
@@ -367,9 +511,12 @@ private fun PreviewHomeScreenEmpty() {
 @Composable
 private fun PreviewHomeScreenLoading() {
     HRTTrackerTheme {
+        val currentTimeH = System.currentTimeMillis() / 3600000.0
         HomeScreenContent(
             pkState = PKState(isSimulating = true),
             doseTimePoints = emptyList(),
+            enabledPlans = emptyList(),
+            realtimeCurrentTimeH = currentTimeH,
             onRefresh = {}
         )
     }
@@ -398,7 +545,50 @@ private fun PreviewHomeScreenWithData() {
                 currentTimeH - 72,
                 currentTimeH - 24
             ),
+            enabledPlans = emptyList(),
+            realtimeCurrentTimeH = currentTimeH,
             onRefresh = {}
         )
     }
+}
+/**
+ * 通过线性插值计算指定时刻的血药浓度
+ */
+private fun calculateConcentrationAtTime(
+    simulationResult: SimulationResult,
+    targetTimeH: Double
+): Double? {
+    if (simulationResult.timeH.isEmpty() || simulationResult.concPGmL.isEmpty()) {
+        return null
+    }
+    
+    val minTime = simulationResult.timeH.minOrNull() ?: return null
+    val maxTime = simulationResult.timeH.maxOrNull() ?: return null
+
+    // 如果目标时刻在数据范围之外，返回 null
+    if (targetTimeH < minTime || targetTimeH > maxTime) {
+        return null
+    }
+
+    // 找到目标时刻在两个数据点之间的位置
+    for (i in 0 until simulationResult.timeH.size - 1) {
+        val time1 = simulationResult.timeH[i]
+        val time2 = simulationResult.timeH[i + 1]
+
+        if (time1 <= targetTimeH && targetTimeH <= time2) {
+            // 线性插值
+            val conc1 = simulationResult.concPGmL[i]
+            val conc2 = simulationResult.concPGmL[i + 1]
+            
+            // 避免除以零
+            if (time2 == time1) {
+                return conc1
+            }
+            
+            val ratio = (targetTimeH - time1) / (time2 - time1)
+            return conc1 + (conc2 - conc1) * ratio
+        }
+    }
+
+    return null
 }
