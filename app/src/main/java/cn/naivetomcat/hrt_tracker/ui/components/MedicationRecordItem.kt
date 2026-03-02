@@ -17,6 +17,8 @@ import cn.naivetomcat.hrt_tracker.pk.DoseEvent
 import cn.naivetomcat.hrt_tracker.pk.Ester
 import cn.naivetomcat.hrt_tracker.pk.Route
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
+import cn.naivetomcat.hrt_tracker.ui.utils.getRouteDisplayName
+import cn.naivetomcat.hrt_tracker.ui.utils.getRouteIcon
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -89,35 +91,6 @@ fun MedicationRecordItem(
                 }
             }
         )
-    }
-}
-
-/**
- * 根据给药途径获取对应的图标
- */
-@Composable
-private fun getRouteIcon(route: Route): ImageVector {
-    return when (route) {
-        Route.INJECTION -> Icons.Filled.Vaccines       // 注射
-        Route.ORAL -> Icons.Filled.Medication          // 口服
-        Route.SUBLINGUAL -> Icons.Filled.WaterDrop     // 舌下
-        Route.GEL -> Icons.Filled.Soap                 // 凝胶
-        Route.PATCH_APPLY -> Icons.Filled.AddBox       // 应用贴片
-        Route.PATCH_REMOVE -> Icons.Filled.RemoveCircle // 移除贴片
-    }
-}
-
-/**
- * 获取给药途径的显示名称
- */
-private fun getRouteDisplayName(route: Route): String {
-    return when (route) {
-        Route.INJECTION -> "肌肉注射"
-        Route.ORAL -> "口服"
-        Route.SUBLINGUAL -> "舌下含服"
-        Route.GEL -> "透皮凝胶"
-        Route.PATCH_APPLY -> "应用贴片"
-        Route.PATCH_REMOVE -> "移除贴片"
     }
 }
 

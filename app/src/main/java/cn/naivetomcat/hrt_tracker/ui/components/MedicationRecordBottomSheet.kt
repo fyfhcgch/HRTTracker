@@ -18,6 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cn.naivetomcat.hrt_tracker.pk.*
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
+import cn.naivetomcat.hrt_tracker.ui.utils.getRouteDisplayName
+import cn.naivetomcat.hrt_tracker.ui.utils.getRouteIcon
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -842,34 +844,6 @@ private fun getAvailableEstersForRoute(route: Route): List<Ester> {
 }
 
 /**
- * 获取给药途径的显示名称
- */
-private fun getRouteDisplayName(route: Route): String {
-    return when (route) {
-        Route.INJECTION -> "肌肉注射"
-        Route.ORAL -> "口服"
-        Route.SUBLINGUAL -> "舌下含服"
-        Route.GEL -> "凝胶涂抹"
-        Route.PATCH_APPLY -> "贴片贴上"
-        Route.PATCH_REMOVE -> "贴片移除"
-    }
-}
-
-/**
- * 获取给药途径的图标
- */
-private fun getRouteIcon(route: Route): androidx.compose.ui.graphics.vector.ImageVector {
-    return when (route) {
-        Route.INJECTION -> Icons.Default.Vaccines
-        Route.ORAL -> Icons.Default.Medication
-        Route.SUBLINGUAL -> Icons.Default.Lightbulb
-        Route.GEL -> Icons.Default.Opacity
-        Route.PATCH_APPLY -> Icons.Default.Add
-        Route.PATCH_REMOVE -> Icons.Default.Remove
-    }
-}
-
-/**
  * 获取酯类的显示名称
  */
 private fun getEsterDisplayName(ester: Ester): String {
@@ -987,7 +961,7 @@ private fun PreviewMedicationRecordBottomSheetAdd() {
                     value = "肌肉注射",
                     onValueChange = {},
                     readOnly = true,
-                    leadingIcon = { Icon(Icons.Default.Vaccines, contentDescription = null) },
+                    leadingIcon = { Icon(getRouteIcon(Route.INJECTION), contentDescription = null) },
                     trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1124,7 +1098,7 @@ private fun PreviewMedicationRecordBottomSheetEditInjection() {
                     onValueChange = {},
                     label = { Text("给药途径") },
                     readOnly = true,
-                    leadingIcon = { Icon(Icons.Default.Vaccines, contentDescription = null) },
+                    leadingIcon = { Icon(getRouteIcon(Route.INJECTION), contentDescription = null) },
                     trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1208,7 +1182,7 @@ private fun PreviewMedicationRecordBottomSheetEditSublingual() {
                     onValueChange = {},
                     label = { Text("给药途径") },
                     readOnly = true,
-                    leadingIcon = { Icon(Icons.Default.Lightbulb, contentDescription = null) },
+                    leadingIcon = { Icon(getRouteIcon(Route.SUBLINGUAL), contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -1311,7 +1285,7 @@ private fun PreviewMedicationRecordBottomSheetEditPatchRate() {
                     onValueChange = {},
                     label = { Text("给药途径") },
                     readOnly = true,
-                    leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    leadingIcon = { Icon(getRouteIcon(Route.PATCH_APPLY), contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
