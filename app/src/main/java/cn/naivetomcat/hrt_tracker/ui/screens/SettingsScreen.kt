@@ -9,7 +9,9 @@ import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.ColorLens
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
@@ -304,6 +306,7 @@ private fun ColorThemeSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AboutSection(
     onCopyrightClick: () -> Unit,
@@ -319,18 +322,43 @@ private fun AboutSection(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        OutlinedButton(
-            onClick = onCopyrightClick,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Text(stringResource(R.string.about_copyright_button))
-        }
+            SegmentedListItem(
+                onClick = onCopyrightClick,
+                shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null
+                    )
+                }
+            ) {
+                Text(stringResource(R.string.about_copyright_button))
+            }
 
-        OutlinedButton(
-            onClick = onDisclaimerClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.about_disclaimer_button))
+            SegmentedListItem(
+                onClick = onDisclaimerClick,
+                shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.WarningAmber,
+                        contentDescription = null
+                    )
+                }
+            ) {
+                Text(stringResource(R.string.about_disclaimer_button))
+            }
         }
     }
 }
