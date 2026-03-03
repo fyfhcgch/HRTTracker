@@ -15,9 +15,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.data.ColorTheme
 import cn.naivetomcat.hrt_tracker.data.ThemeMode
 import cn.naivetomcat.hrt_tracker.data.UserSettings
@@ -34,10 +36,13 @@ fun SettingsScreen(
     onThemeModeChange: (ThemeMode) -> Unit,
     onColorThemeChange: (ColorTheme) -> Unit
 ) {
+    var showCopyrightDialog by remember { mutableStateOf(false) }
+    var showDisclaimerDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("设置", style = MaterialTheme.typography.headlineMediumEmphasized) },
+                title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineMediumEmphasized) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -70,6 +75,37 @@ fun SettingsScreen(
                 currentTheme = settings.colorTheme,
                 onThemeChange = onColorThemeChange
             )
+
+            AboutSection(
+                onCopyrightClick = { showCopyrightDialog = true },
+                onDisclaimerClick = { showDisclaimerDialog = true }
+            )
+        }
+
+        if (showCopyrightDialog) {
+            AlertDialog(
+                onDismissRequest = { showCopyrightDialog = false },
+                title = { Text(stringResource(R.string.about_copyright_title)) },
+                text = { Text(stringResource(R.string.about_copyright_content)) },
+                confirmButton = {
+                    TextButton(onClick = { showCopyrightDialog = false }) {
+                        Text(stringResource(R.string.dialog_close))
+                    }
+                }
+            )
+        }
+
+        if (showDisclaimerDialog) {
+            AlertDialog(
+                onDismissRequest = { showDisclaimerDialog = false },
+                title = { Text(stringResource(R.string.about_disclaimer_title)) },
+                text = { Text(stringResource(R.string.about_disclaimer_content)) },
+                confirmButton = {
+                    TextButton(onClick = { showDisclaimerDialog = false }) {
+                        Text(stringResource(R.string.dialog_close))
+                    }
+                }
+            )
         }
     }
 }
@@ -89,13 +125,13 @@ private fun BodyWeightSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "体重",
+            text = stringResource(R.string.settings_weight_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         Text(
-            text = "用于血药浓度计算",
+            text = stringResource(R.string.settings_weight_desc),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -113,12 +149,12 @@ private fun BodyWeightSection(
                     isError = true
                 }
             },
-            label = { Text("体重 (kg)") },
+            label = { Text(stringResource(R.string.settings_weight_label)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             isError = isError,
             supportingText = {
                 if (isError) {
-                    Text("请输入有效的体重 (0-300 kg)")
+                    Text(stringResource(R.string.settings_weight_error))
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -139,7 +175,7 @@ private fun ThemeModeSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "夜间模式",
+            text = stringResource(R.string.settings_theme_mode_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -151,14 +187,14 @@ private fun ThemeModeSection(
         ) {
             ThemeMode.entries.forEachIndexed { index, mode ->
                 val label = when (mode) {
-                    ThemeMode.LIGHT -> "浅色"
-                    ThemeMode.DARK -> "深色"
-                    ThemeMode.SYSTEM -> "系统默认"
+                    ThemeMode.LIGHT -> stringResource(R.string.settings_theme_mode_light)
+                    ThemeMode.DARK -> stringResource(R.string.settings_theme_mode_dark)
+                    ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_mode_system)
                 }
                 val description = when (mode) {
-                    ThemeMode.LIGHT -> "始终使用浅色主题"
-                    ThemeMode.DARK -> "始终使用深色主题"
-                    ThemeMode.SYSTEM -> "跟随系统设置"
+                    ThemeMode.LIGHT -> stringResource(R.string.settings_theme_mode_light_desc)
+                    ThemeMode.DARK -> stringResource(R.string.settings_theme_mode_dark_desc)
+                    ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_mode_system_desc)
                 }
                 val icon = when (mode) {
                     ThemeMode.LIGHT -> Icons.Outlined.LightMode
@@ -212,7 +248,7 @@ private fun ColorThemeSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "颜色主题",
+            text = stringResource(R.string.settings_color_theme_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -224,12 +260,12 @@ private fun ColorThemeSection(
         ) {
             ColorTheme.entries.forEachIndexed { index, theme ->
                 val label = when (theme) {
-                    ColorTheme.DYNAMIC -> "动态着色"
-                    ColorTheme.BUILTIN -> "内置配色"
+                    ColorTheme.DYNAMIC -> stringResource(R.string.settings_color_theme_dynamic)
+                    ColorTheme.BUILTIN -> stringResource(R.string.settings_color_theme_builtin)
                 }
                 val description = when (theme) {
-                    ColorTheme.DYNAMIC -> "跟随系统动态着色 (Android 12+)"
-                    ColorTheme.BUILTIN -> "使用应用内置配色方案"
+                    ColorTheme.DYNAMIC -> stringResource(R.string.settings_color_theme_dynamic_desc)
+                    ColorTheme.BUILTIN -> stringResource(R.string.settings_color_theme_builtin_desc)
                 }
                 val icon = when (theme) {
                     ColorTheme.DYNAMIC -> Icons.Outlined.ColorLens
@@ -264,6 +300,37 @@ private fun ColorThemeSection(
                     Text(label)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AboutSection(
+    onCopyrightClick: () -> Unit,
+    onDisclaimerClick: () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.about_section_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        OutlinedButton(
+            onClick = onCopyrightClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.about_copyright_button))
+        }
+
+        OutlinedButton(
+            onClick = onDisclaimerClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.about_disclaimer_button))
         }
     }
 }

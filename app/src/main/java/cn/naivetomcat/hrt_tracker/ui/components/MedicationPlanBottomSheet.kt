@@ -12,9 +12,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.data.MedicationPlan
 import cn.naivetomcat.hrt_tracker.pk.*
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
@@ -123,7 +125,7 @@ fun MedicationPlanBottomSheet(
             ) {
                 // 标题
                 Text(
-                    text = if (planToEdit != null) "编辑用药方案" else "添加用药方案",
+                    text = if (planToEdit != null) stringResource(R.string.plan_sheet_edit_title) else stringResource(R.string.plan_sheet_add_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 24.dp)
@@ -133,7 +135,7 @@ fun MedicationPlanBottomSheet(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("方案名称") },
+                    label = { Text(stringResource(R.string.plan_sheet_name_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -161,7 +163,7 @@ fun MedicationPlanBottomSheet(
                 OutlinedTextField(
                     value = doseMGText,
                     onValueChange = { doseMGText = it },
-                    label = { Text("剂量 (mg)") },
+                    label = { Text(stringResource(R.string.plan_sheet_dose_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -213,7 +215,7 @@ fun MedicationPlanBottomSheet(
                         OutlinedTextField(
                             value = intervalDays,
                             onValueChange = { intervalDays = it },
-                            label = { Text("间隔天数") },
+                            label = { Text(stringResource(R.string.plan_sheet_interval_days_label)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
@@ -262,7 +264,7 @@ fun MedicationPlanBottomSheet(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("删除")
+                            Text(stringResource(R.string.common_delete))
                         }
                     }
 
@@ -271,7 +273,7 @@ fun MedicationPlanBottomSheet(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("取消")
+                        Text(stringResource(R.string.common_cancel))
                     }
 
                     // 保存按钮
@@ -304,7 +306,7 @@ fun MedicationPlanBottomSheet(
                         modifier = Modifier.weight(1f),
                         enabled = isValid
                     ) {
-                        Text("保存")
+                        Text(stringResource(R.string.common_save))
                     }
                 }
             }
@@ -345,7 +347,7 @@ private fun RouteSelectionSection(
 ) {
     Column {
         Text(
-            text = "给药途径",
+            text = stringResource(R.string.plan_sheet_route_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -386,7 +388,7 @@ private fun EsterSelectionSection(
 ) {
     Column {
         Text(
-            text = "药物类型",
+            text = stringResource(R.string.plan_sheet_ester_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -404,7 +406,7 @@ private fun EsterSelectionSection(
                     )
                 ) {
                     Text(
-                        text = ester.name,
+                        text = getEsterDisplayName(ester),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -424,7 +426,7 @@ private fun ScheduleTypeSection(
 ) {
     Column {
         Text(
-            text = "给药周期",
+            text = stringResource(R.string.plan_sheet_schedule_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -444,9 +446,9 @@ private fun ScheduleTypeSection(
                 ) {
                     Text(
                         text = when (type) {
-                            MedicationPlan.ScheduleType.DAILY -> "每天"
-                            MedicationPlan.ScheduleType.WEEKLY -> "每周"
-                            MedicationPlan.ScheduleType.CUSTOM -> "自定义"
+                            MedicationPlan.ScheduleType.DAILY -> stringResource(R.string.plan_sheet_schedule_daily)
+                            MedicationPlan.ScheduleType.WEEKLY -> stringResource(R.string.plan_sheet_schedule_weekly)
+                            MedicationPlan.ScheduleType.CUSTOM -> stringResource(R.string.plan_sheet_schedule_custom)
                         },
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -466,7 +468,7 @@ private fun DaysOfWeekSection(
 ) {
     Column {
         Text(
-            text = "星期选择",
+            text = stringResource(R.string.plan_sheet_weekday_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -476,13 +478,13 @@ private fun DaysOfWeekSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             val days = listOf(
-                DayOfWeek.MONDAY to "一",
-                DayOfWeek.TUESDAY to "二",
-                DayOfWeek.WEDNESDAY to "三",
-                DayOfWeek.THURSDAY to "四",
-                DayOfWeek.FRIDAY to "五",
-                DayOfWeek.SATURDAY to "六",
-                DayOfWeek.SUNDAY to "日"
+                DayOfWeek.MONDAY to stringResource(R.string.weekday_mon_short),
+                DayOfWeek.TUESDAY to stringResource(R.string.weekday_tue_short),
+                DayOfWeek.WEDNESDAY to stringResource(R.string.weekday_wed_short),
+                DayOfWeek.THURSDAY to stringResource(R.string.weekday_thu_short),
+                DayOfWeek.FRIDAY to stringResource(R.string.weekday_fri_short),
+                DayOfWeek.SATURDAY to stringResource(R.string.weekday_sat_short),
+                DayOfWeek.SUNDAY to stringResource(R.string.weekday_sun_short)
             )
 
             days.forEach { (day, label) ->
@@ -514,14 +516,14 @@ private fun TimeOfDaySection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "给药时间",
+                text = stringResource(R.string.plan_sheet_time_title),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
             IconButton(onClick = onAddTime) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "添加时间"
+                    contentDescription = stringResource(R.string.plan_sheet_time_add)
                 )
             }
         }
@@ -558,7 +560,7 @@ private fun TimeOfDaySection(
                     IconButton(onClick = { onRemoveTime(index) }) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "删除时间"
+                            contentDescription = stringResource(R.string.plan_sheet_time_remove)
                         )
                     }
                 }
@@ -585,12 +587,12 @@ private fun TimePickerDialog(
         onDismissRequest = onDismiss,
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.common_cancel))
             }
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("确定")
+                Text(stringResource(R.string.common_confirm))
             }
         },
         text = { content() }
@@ -608,7 +610,7 @@ private fun SublingualTierSelector(
 ) {
     Column {
         Text(
-            text = "舌下吸收等级",
+            text = stringResource(R.string.plan_sheet_sublingual_tier_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
@@ -649,24 +651,37 @@ private fun SublingualTierSelector(
 /**
  * 获取舌下吸收等级名称
  */
+@Composable
 private fun getSublingualTierName(tier: SublingualTier): String {
     return when (tier) {
-        SublingualTier.QUICK -> "快速"
-        SublingualTier.CASUAL -> "随意"
-        SublingualTier.STANDARD -> "标准"
-        SublingualTier.STRICT -> "严格"
+        SublingualTier.QUICK -> stringResource(R.string.sublingual_tier_quick)
+        SublingualTier.CASUAL -> stringResource(R.string.sublingual_tier_casual)
+        SublingualTier.STANDARD -> stringResource(R.string.sublingual_tier_standard)
+        SublingualTier.STRICT -> stringResource(R.string.sublingual_tier_strict)
     }
 }
 
 /**
  * 获取舌下吸收等级描述
  */
+@Composable
 private fun getSublingualTierDescription(tier: SublingualTier): String {
     return when (tier) {
-        SublingualTier.QUICK -> "~2分钟"
-        SublingualTier.CASUAL -> "~5分钟"
-        SublingualTier.STANDARD -> "~10分钟"
-        SublingualTier.STRICT -> "~15分钟"
+        SublingualTier.QUICK -> stringResource(R.string.sublingual_tier_quick_desc)
+        SublingualTier.CASUAL -> stringResource(R.string.sublingual_tier_casual_desc)
+        SublingualTier.STANDARD -> stringResource(R.string.sublingual_tier_standard_desc)
+        SublingualTier.STRICT -> stringResource(R.string.sublingual_tier_strict_desc)
+    }
+}
+
+@Composable
+private fun getEsterDisplayName(ester: Ester): String {
+    return when (ester) {
+        Ester.E2 -> stringResource(R.string.ester_e2)
+        Ester.EB -> stringResource(R.string.ester_eb)
+        Ester.EV -> stringResource(R.string.ester_ev)
+        Ester.EC -> stringResource(R.string.ester_ec)
+        Ester.EN -> stringResource(R.string.ester_en)
     }
 }
 

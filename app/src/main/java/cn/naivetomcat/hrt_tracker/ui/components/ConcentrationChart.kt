@@ -21,12 +21,14 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.IntOffset
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.pk.SimulationResult
 import java.text.SimpleDateFormat
 import java.util.*
@@ -105,7 +107,7 @@ fun ConcentrationChart(
             modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("暂无数据", color = onSurfaceColor)
+            Text(stringResource(R.string.chart_no_data), color = onSurfaceColor)
         }
         return
     }

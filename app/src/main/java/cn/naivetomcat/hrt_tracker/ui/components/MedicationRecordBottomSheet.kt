@@ -12,10 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.pk.*
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
 import cn.naivetomcat.hrt_tracker.ui.utils.getRouteDisplayName
@@ -185,7 +187,7 @@ fun MedicationRecordBottomSheet(
             ) {
                 // 标题
                 Text(
-                    text = if (eventToEdit != null) "编辑用药记录" else "添加用药记录",
+                    text = if (eventToEdit != null) stringResource(R.string.record_sheet_edit_title) else stringResource(R.string.record_sheet_add_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 24.dp)
@@ -290,7 +292,7 @@ fun MedicationRecordBottomSheet(
                         ) {
                             Icon(Icons.Default.Delete, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("删除")
+                            Text(stringResource(R.string.common_delete))
                         }
                     }
 
@@ -299,7 +301,7 @@ fun MedicationRecordBottomSheet(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("取消")
+                        Text(stringResource(R.string.common_cancel))
                     }
 
                     // 保存按钮
@@ -343,7 +345,7 @@ fun MedicationRecordBottomSheet(
                             else -> rawDoseText.toDoubleOrNull() != null && rawDoseText.toDoubleOrNull()!! > 0
                         }
                     ) {
-                        Text("保存")
+                        Text(stringResource(R.string.common_save))
                     }
                 }
             }
@@ -369,12 +371,12 @@ fun MedicationRecordBottomSheet(
                     }
                     showDatePicker = false
                 }) {
-                    Text("确定")
+                    Text(stringResource(R.string.common_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         ) {
@@ -401,12 +403,12 @@ fun MedicationRecordBottomSheet(
                     selectedDateTime = calendar.time
                     showTimePicker = false
                 }) {
-                    Text("确定")
+                    Text(stringResource(R.string.common_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
             text = {
@@ -427,7 +429,7 @@ private fun DateTimeSection(
 ) {
     Column {
         Text(
-            text = "给药时间",
+            text = stringResource(R.string.record_sheet_time_title),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -498,7 +500,7 @@ private fun RouteSelector(
 ) {
     Column {
         Text(
-            text = "给药途径",
+            text = stringResource(R.string.record_sheet_route_title),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -562,7 +564,7 @@ private fun EsterSelector(
 ) {
     Column {
         Text(
-            text = "药物类型",
+            text = stringResource(R.string.record_sheet_ester_title),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -630,7 +632,7 @@ private fun DoseInputSection(
 ) {
     Column {
         Text(
-            text = "药物剂量",
+            text = stringResource(R.string.record_sheet_dose_title),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -645,12 +647,18 @@ private fun DoseInputSection(
                 value = rawDoseText,
                 onValueChange = onRawDoseChange,
                 label = {
-                    Text(if (selectedEster == Ester.E2) "剂量 (mg)" else "${selectedEster.name} 剂量 (mg)")
+                    Text(
+                        if (selectedEster == Ester.E2) {
+                            stringResource(R.string.record_sheet_dose_label)
+                        } else {
+                            stringResource(R.string.record_sheet_dose_label_with_ester, selectedEster.name)
+                        }
+                    )
                 },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
                 trailingIcon = {
-                    Text("mg", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.unit_mg), style = MaterialTheme.typography.bodySmall)
                 }
             )
 
@@ -659,11 +667,11 @@ private fun DoseInputSection(
                 OutlinedTextField(
                     value = e2DoseText,
                     onValueChange = onE2DoseChange,
-                    label = { Text("等效 E2 (mg)") },
+                    label = { Text(stringResource(R.string.record_sheet_e2_equivalent_label)) },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                     trailingIcon = {
-                        Text("mg", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.unit_mg), style = MaterialTheme.typography.bodySmall)
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(
@@ -677,7 +685,7 @@ private fun DoseInputSection(
         // 显示转换因子提示
         if (selectedEster != Ester.E2) {
             Text(
-                text = "转换因子: ${String.format("%.4f", Ester.toE2Factor(selectedEster))}",
+                text = stringResource(R.string.record_sheet_conversion_factor, String.format("%.4f", Ester.toE2Factor(selectedEster))),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, top = 4.dp)
@@ -703,23 +711,23 @@ private fun PatchDoseInput(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "贴片总剂量",
+                text = stringResource(R.string.record_sheet_patch_total_dose),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             TextButton(onClick = onModeChange) {
-                Text("切换到释放速率")
+                Text(stringResource(R.string.record_sheet_switch_to_rate))
             }
         }
 
         OutlinedTextField(
             value = rawDoseText,
             onValueChange = onRawDoseChange,
-            label = { Text("总剂量") },
+            label = { Text(stringResource(R.string.record_sheet_total_dose_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                Text("mg", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.unit_mg), style = MaterialTheme.typography.bodySmall)
             }
         )
     }
@@ -741,28 +749,28 @@ private fun PatchRateInput(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "贴片释放速率",
+                text = stringResource(R.string.record_sheet_patch_rate),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             TextButton(onClick = onModeChange) {
-                Text("切换到总剂量")
+                Text(stringResource(R.string.record_sheet_switch_to_total_dose))
             }
         }
 
         OutlinedTextField(
             value = rateText,
             onValueChange = onRateChange,
-            label = { Text("释放速率") },
+            label = { Text(stringResource(R.string.record_sheet_rate_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                Text("µg/天", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.unit_ug_per_day), style = MaterialTheme.typography.bodySmall)
             }
         )
 
         Text(
-            text = "输入贴片标称的释放速率（如 50, 100 µg/天）",
+            text = stringResource(R.string.record_sheet_rate_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 16.dp, top = 4.dp)
@@ -781,7 +789,7 @@ private fun SublingualTierSelector(
 ) {
     Column {
         Text(
-            text = "舌下吸收等级",
+            text = stringResource(R.string.record_sheet_sublingual_tier_title),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -846,37 +854,40 @@ private fun getAvailableEstersForRoute(route: Route): List<Ester> {
 /**
  * 获取酯类的显示名称
  */
+@Composable
 private fun getEsterDisplayName(ester: Ester): String {
     return when (ester) {
-        Ester.E2 -> "E2 - 雌二醇"
-        Ester.EB -> "EB - 苯甲酸雌二醇"
-        Ester.EV -> "EV - 戊酸雌二醇"
-        Ester.EC -> "EC - 环戊丙酸雌二醇"
-        Ester.EN -> "EN - 庚酸雌二醇"
+        Ester.E2 -> stringResource(R.string.record_sheet_ester_e2)
+        Ester.EB -> stringResource(R.string.record_sheet_ester_eb)
+        Ester.EV -> stringResource(R.string.record_sheet_ester_ev)
+        Ester.EC -> stringResource(R.string.record_sheet_ester_ec)
+        Ester.EN -> stringResource(R.string.record_sheet_ester_en)
     }
 }
 
 /**
  * 获取舌下吸收等级名称
  */
+@Composable
 private fun getSublingualTierName(tier: SublingualTier): String {
     return when (tier) {
-        SublingualTier.QUICK -> "快速"
-        SublingualTier.CASUAL -> "随意"
-        SublingualTier.STANDARD -> "标准"
-        SublingualTier.STRICT -> "严格"
+        SublingualTier.QUICK -> stringResource(R.string.sublingual_tier_quick)
+        SublingualTier.CASUAL -> stringResource(R.string.sublingual_tier_casual)
+        SublingualTier.STANDARD -> stringResource(R.string.sublingual_tier_standard)
+        SublingualTier.STRICT -> stringResource(R.string.sublingual_tier_strict)
     }
 }
 
 /**
  * 获取舌下吸收等级描述
  */
+@Composable
 private fun getSublingualTierDescription(tier: SublingualTier): String {
     return when (tier) {
-        SublingualTier.QUICK -> "~2分钟"
-        SublingualTier.CASUAL -> "~5分钟"
-        SublingualTier.STANDARD -> "~10分钟"
-        SublingualTier.STRICT -> "~15分钟"
+        SublingualTier.QUICK -> stringResource(R.string.sublingual_tier_quick_desc)
+        SublingualTier.CASUAL -> stringResource(R.string.sublingual_tier_casual_desc)
+        SublingualTier.STANDARD -> stringResource(R.string.sublingual_tier_standard_desc)
+        SublingualTier.STRICT -> stringResource(R.string.sublingual_tier_strict_desc)
     }
 }
 

@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -38,6 +39,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.ui.screens.HomeScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.MedicationPlansScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.MedicationRecordsScreen
@@ -206,25 +208,25 @@ private fun BottomNavigationBar(
             screen = Screen.HOME,
             selectedIcon = Icons.Filled.Home,
             unselectedIcon = Icons.Outlined.Home,
-            label = "主页"
+            label = stringResource(R.string.nav_home)
         ),
         BottomNavItem(
             screen = Screen.RECORDS,
             selectedIcon = Icons.Filled.List,
             unselectedIcon = Icons.Outlined.List,
-            label = "记录"
+            label = stringResource(R.string.nav_records)
         ),
         BottomNavItem(
             screen = Screen.MEDICATION_PLANS,
             selectedIcon = Icons.Filled.MedicalServices,
             unselectedIcon = Icons.Outlined.MedicalServices,
-            label = "方案"
+            label = stringResource(R.string.nav_plans)
         ),
         BottomNavItem(
             screen = Screen.SETTINGS,
             selectedIcon = Icons.Filled.Settings,
             unselectedIcon = Icons.Outlined.Settings,
-            label = "设置"
+            label = stringResource(R.string.nav_settings)
         )
     )
 

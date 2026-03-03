@@ -11,8 +11,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.data.MedicationPlan
 import cn.naivetomcat.hrt_tracker.pk.Ester
 import cn.naivetomcat.hrt_tracker.pk.Route
@@ -89,7 +91,7 @@ fun MedicationPlansScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("用药方案", style = MaterialTheme.typography.headlineMediumEmphasized) },
+                title = { Text(stringResource(R.string.plans_title), style = MaterialTheme.typography.headlineMediumEmphasized) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -103,7 +105,7 @@ fun MedicationPlansScreenContent(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "添加用药方案"
+                    contentDescription = stringResource(R.string.plans_add_content_desc)
                 )
             }
         },
@@ -118,7 +120,7 @@ fun MedicationPlansScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "暂无用药方案",
+                    text = stringResource(R.string.plans_empty),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

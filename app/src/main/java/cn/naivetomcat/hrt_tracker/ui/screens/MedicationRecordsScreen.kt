@@ -9,13 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.data.MedicationPlan
 import cn.naivetomcat.hrt_tracker.data.ThemeMode
-import cn.naivetomcat.hrt_tracker.data.displayName
 import cn.naivetomcat.hrt_tracker.pk.DoseEvent
 import cn.naivetomcat.hrt_tracker.pk.Ester
 import cn.naivetomcat.hrt_tracker.pk.Route
@@ -128,7 +129,7 @@ private fun MedicationRecordsScreenContent(
         ),
         topBar = {
             TopAppBar(
-                title = { Text("用药记录", style = MaterialTheme.typography.headlineMediumEmphasized) },
+                title = { Text(stringResource(R.string.records_title), style = MaterialTheme.typography.headlineMediumEmphasized) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -149,7 +150,11 @@ private fun MedicationRecordsScreenContent(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = if (fabMenuExpanded) "关闭添加菜单" else "打开添加菜单"
+                            contentDescription = if (fabMenuExpanded) {
+                                stringResource(R.string.records_fab_close)
+                            } else {
+                                stringResource(R.string.records_fab_open)
+                            }
                         )
                     }
                 }
@@ -166,7 +171,7 @@ private fun MedicationRecordsScreenContent(
                         )
                     },
                     text = {
-                        Text("手动添加")
+                        Text(stringResource(R.string.records_manual_add))
                     }
                 )
 
@@ -180,7 +185,7 @@ private fun MedicationRecordsScreenContent(
                             )
                         },
                         text = {
-                            Text("暂无用药方案")
+                            Text(stringResource(R.string.records_no_plan))
                         }
                     )
                 } else {
@@ -197,7 +202,14 @@ private fun MedicationRecordsScreenContent(
                                 )
                             },
                             text = {
-                                Text("${plan.ester.displayName}·${plan.doseMG}mg·${getRouteDisplayName(plan.route)}")
+                                Text(
+                                    stringResource(
+                                        R.string.records_quick_add_format,
+                                        getEsterDisplayName(plan.ester),
+                                        plan.doseMG,
+                                        getRouteDisplayName(plan.route)
+                                    )
+                                )
                             }
                         )
                     }
@@ -226,12 +238,12 @@ private fun MedicationRecordsScreenContent(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "暂无用药记录",
+                        text = stringResource(R.string.records_no_records),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "点击右下角按钮添加用药记录",
+                        text = stringResource(R.string.records_add_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -285,6 +297,17 @@ private fun currentTimeHAtMinutePrecision(): Double {
     val nowMs = System.currentTimeMillis()
     val minuteAlignedMs = (nowMs / 60000L) * 60000L
     return minuteAlignedMs / 3600000.0
+}
+
+@Composable
+private fun getEsterDisplayName(ester: Ester): String {
+    return when (ester) {
+        Ester.E2 -> stringResource(R.string.ester_e2)
+        Ester.EB -> stringResource(R.string.ester_eb)
+        Ester.EV -> stringResource(R.string.ester_ev)
+        Ester.EC -> stringResource(R.string.ester_ec)
+        Ester.EN -> stringResource(R.string.ester_en)
+    }
 }
 
 // ============================================================================

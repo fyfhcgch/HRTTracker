@@ -14,9 +14,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.data.MedicationPlan
 import cn.naivetomcat.hrt_tracker.pk.SimulationResult
 import cn.naivetomcat.hrt_tracker.ui.components.ConcentrationChart
@@ -100,12 +102,12 @@ private fun HomeScreenContent(
         ),
         topBar = {
             TopAppBar(
-                title = { Text("雌二醇血药浓度", style = MaterialTheme.typography.headlineMediumEmphasized) },
+                title = { Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMediumEmphasized) },
                 actions = {
                     IconButton(onClick = onRefresh) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
-                            contentDescription = "刷新"
+                            contentDescription = stringResource(R.string.home_refresh)
                         )
                     }
                 },
@@ -131,7 +133,7 @@ private fun HomeScreenContent(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         CircularProgressIndicator()
-                        Text("计算中...")
+                        Text(stringResource(R.string.home_calculating))
                     }
                 }
             }
@@ -155,12 +157,12 @@ private fun HomeScreenContent(
                             tint = MaterialTheme.colorScheme.error
                         )
                         Text(
-                            text = pkState.error ?: "未知错误",
+                            text = pkState.error ?: stringResource(R.string.common_unknown_error),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.error
                         )
                         Button(onClick = onRefresh) {
-                            Text("重试")
+                            Text(stringResource(R.string.common_retry))
                         }
                     }
                 }
@@ -179,12 +181,12 @@ private fun HomeScreenContent(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "暂无数据",
+                            text = stringResource(R.string.common_no_data),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "请先添加用药记录",
+                            text = stringResource(R.string.home_need_add_record),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -256,7 +258,7 @@ private fun CurrentConcentrationCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "当前浓度",
+                text = stringResource(R.string.home_current_concentration),
                 style = MaterialTheme.typography.titleMedium
             )
             Row(
@@ -268,14 +270,14 @@ private fun CurrentConcentrationCard(
                     text = if (concentration != null) {
                         "%.1f pg/mL".format(concentration)
                     } else {
-                        "-- pg/mL"
+                        stringResource(R.string.home_concentration_placeholder)
                     },
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold
                 )
                 
                 Text(
-                    text = tempPkState.getConcentrationLevel() ?: "--",
+                    text = getConcentrationLevelText(tempPkState.getConcentrationLevelColor()),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -304,7 +306,7 @@ private fun ChartCard(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "血药浓度曲线",
+                text = stringResource(R.string.home_chart_title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -336,33 +338,33 @@ private fun ConcentrationLevelGuide() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "浓度等级参考",
+                text = stringResource(R.string.home_level_guide),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             
             ConcentrationLevelItem(
-                level = "低于参考范围",
+                level = stringResource(R.string.home_level_low),
                 range = "< 30 pg/mL",
                 color = MaterialTheme.colorScheme.error
             )
             ConcentrationLevelItem(
-                level = "女性卵泡期",
+                level = stringResource(R.string.home_level_follicular),
                 range = "30-70 pg/mL",
                 color = MaterialTheme.colorScheme.tertiary
             )
             ConcentrationLevelItem(
-                level = "女性黄体期",
+                level = stringResource(R.string.home_level_luteal),
                 range = "70-300 pg/mL",
                 color = MaterialTheme.colorScheme.secondary
             )
             ConcentrationLevelItem(
-                level = "非针剂女性向 GAHT 目标",
+                level = stringResource(R.string.home_level_target),
                 range = "100-200 pg/mL",
                 color = MaterialTheme.colorScheme.primary
             )
             ConcentrationLevelItem(
-                level = "高于参考范围",
+                level = stringResource(R.string.home_level_high),
                 range = "> 300 pg/mL",
                 color = MaterialTheme.colorScheme.error
             )
@@ -383,7 +385,7 @@ private fun CurveExplanationGuide() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "曲线说明",
+                text = stringResource(R.string.home_curve_guide),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
@@ -404,7 +406,7 @@ private fun CurveExplanationGuide() {
                         )
                 )
                 Text(
-                    text = "历史数据和早期预测（到第一次计划用药）",
+                    text = stringResource(R.string.home_curve_history),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -425,7 +427,7 @@ private fun CurveExplanationGuide() {
                         )
                 )
                 Text(
-                    text = "无计划预测（50%透明，不按方案沿自然衰减）",
+                    text = stringResource(R.string.home_curve_no_plan),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -446,7 +448,7 @@ private fun CurveExplanationGuide() {
                         )
                 )
                 Text(
-                    text = "按计划预测（50%透明，未来第一次计划用药后）",
+                    text = stringResource(R.string.home_curve_with_plan),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -594,4 +596,16 @@ private fun calculateConcentrationAtTime(
     }
 
     return null
+}
+
+@Composable
+private fun getConcentrationLevelText(level: ConcentrationLevel): String {
+    return when (level) {
+        ConcentrationLevel.LOW -> stringResource(R.string.home_level_low)
+        ConcentrationLevel.FOLLICULAR -> stringResource(R.string.home_level_follicular)
+        ConcentrationLevel.LUTEAL -> stringResource(R.string.home_level_luteal)
+        ConcentrationLevel.MTF_TARGET -> stringResource(R.string.home_level_target)
+        ConcentrationLevel.HIGH -> stringResource(R.string.home_level_high)
+        ConcentrationLevel.UNKNOWN -> stringResource(R.string.home_level_placeholder)
+    }
 }

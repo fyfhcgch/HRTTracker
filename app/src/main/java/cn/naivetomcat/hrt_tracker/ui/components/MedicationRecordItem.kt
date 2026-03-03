@@ -10,9 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.pk.DoseEvent
 import cn.naivetomcat.hrt_tracker.pk.Ester
 import cn.naivetomcat.hrt_tracker.pk.Route
@@ -99,9 +101,9 @@ fun MedicationRecordItem(
  */
 private fun formatDose(doseMG: Double): String {
     return if (doseMG >= 1.0) {
-        String.format("%.1f mg", doseMG)
+        String.format("%.1f %s", doseMG, "mg")
     } else {
-        String.format("%.2f mg", doseMG)
+        String.format("%.2f %s", doseMG, "mg")
     }
 }
 
@@ -149,13 +151,14 @@ fun MedicationRecordItem(
 /**
  * 获取药品显示名称
  */
+@Composable
 private fun getMedicationDisplayName(ester: Ester): String {
     return when (ester) {
-        Ester.E2 -> "雌二醇"
-        Ester.EB -> "苯甲酸雌二醇"
-        Ester.EV -> "戊酸雌二醇"
-        Ester.EC -> "环戊丙酸雌二醇"
-        Ester.EN -> "庚酸雌二醇"
+        Ester.E2 -> stringResource(R.string.ester_e2)
+        Ester.EB -> stringResource(R.string.ester_eb)
+        Ester.EV -> stringResource(R.string.ester_ev)
+        Ester.EC -> stringResource(R.string.ester_ec)
+        Ester.EN -> stringResource(R.string.ester_en)
     }
 }
 
