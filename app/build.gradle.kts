@@ -15,10 +15,10 @@ android {
 
     defaultConfig {
         applicationId = "cn.naivetomcat.hrt_tracker"
-        minSdk = 34
+        minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 10000
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -30,6 +30,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            applicationIdSuffix = "release"
+            versionNameSuffix = "release"
+        }
+        getByName("debug") {
+            versionNameSuffix = "debug"
         }
     }
     compileOptions {

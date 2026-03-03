@@ -1,19 +1,17 @@
 package cn.naivetomcat.hrt_tracker.navigation
 
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideIn
+import android.os.SystemClock
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
@@ -27,11 +25,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -47,6 +46,10 @@ import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.MedicationPlanViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
 
+private const val NAV_SPRING_DAMPING_RATIO = 0.48f
+private const val NAV_SPRING_STIFFNESS = Spring.StiffnessLow
+private const val NAV_CLICK_THROTTLE_MS = 200L
+
 /**
  * 应用主导航
  */
@@ -57,10 +60,16 @@ fun AppNavigation(
     medicationPlanViewModel: MedicationPlanViewModel
 ) {
     val navController = rememberNavController()
-    val density = LocalDensity.current
+    var navDirection by remember { mutableIntStateOf(1) }
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+        ),
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            BottomNavigationBar(
+                navController = navController,
+                onDirectionChange = { navDirection = it }
+            )
         }
     ) { innerPadding ->
         NavHost(
@@ -68,19 +77,97 @@ fun AppNavigation(
             startDestination = Screen.HOME.route,
             modifier = Modifier.padding(innerPadding),
             enterTransition = {
-                slideInHorizontally() + expandHorizontally(
-                    // Expand from the right.
-                    expandFrom = Alignment.Start
-                ) + fadeIn(
-                    // Fade in with the initial alpha of 0.3f.
-                    initialAlpha = 0.3f
-                ) },
+                val initialIndex = screenIndex(initialState.destination.route)
+                val targetIndex = screenIndex(targetState.destination.route)
+                if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
+                    EnterTransition.None
+                } else if (navDirection > 0) {
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        initialOffsetX = { it }
+                    )
+                } else {
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        initialOffsetX = { -it }
+                    )
+                }
+            },
             exitTransition = {
-                slideOutHorizontally() + shrinkHorizontally(
-                    // Shrink towards the right
-                    shrinkTowards = Alignment.End
-                ) + fadeOut()
-             },
+                val initialIndex = screenIndex(initialState.destination.route)
+                val targetIndex = screenIndex(targetState.destination.route)
+                if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
+                    ExitTransition.None
+                } else if (navDirection > 0) {
+                    slideOutHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        targetOffsetX = { -it }
+                    )
+                } else {
+                    slideOutHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        targetOffsetX = { it }
+                    )
+                }
+            },
+            popEnterTransition = {
+                val initialIndex = screenIndex(initialState.destination.route)
+                val targetIndex = screenIndex(targetState.destination.route)
+                if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
+                    EnterTransition.None
+                } else if (navDirection > 0) {
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        initialOffsetX = { it }
+                    )
+                } else {
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        initialOffsetX = { -it }
+                    )
+                }
+            },
+            popExitTransition = {
+                val initialIndex = screenIndex(initialState.destination.route)
+                val targetIndex = screenIndex(targetState.destination.route)
+                if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
+                    ExitTransition.None
+                } else if (navDirection > 0) {
+                    slideOutHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        targetOffsetX = { -it }
+                    )
+                } else {
+                    slideOutHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = NAV_SPRING_DAMPING_RATIO,
+                            stiffness = NAV_SPRING_STIFFNESS
+                        ),
+                        targetOffsetX = { it }
+                    )
+                }
+            },
         ) {
             composable(Screen.HOME.route) {
                 HomeScreen(viewModel = hrtViewModel)
@@ -108,7 +195,12 @@ fun AppNavigation(
  * 底部导航栏
  */
 @Composable
-private fun BottomNavigationBar(navController: NavHostController) {
+private fun BottomNavigationBar(
+    navController: NavHostController,
+    onDirectionChange: (Int) -> Unit
+) {
+    var lastNavigateAt by remember { mutableLongStateOf(0L) }
+
     val items = listOf(
         BottomNavItem(
             screen = Screen.HOME,
@@ -155,6 +247,20 @@ private fun BottomNavigationBar(navController: NavHostController) {
                 label = { Text(item.label) },
                 selected = selected,
                 onClick = {
+                    if (selected) return@NavigationBarItem
+
+                    val currentIndex = screenIndex(currentDestination?.route)
+                    val targetIndex = screenIndex(item.screen.route)
+                    if (currentIndex != -1 && targetIndex != -1) {
+                        onDirectionChange(if (targetIndex > currentIndex) 1 else -1)
+                    }
+
+                    val now = SystemClock.elapsedRealtime()
+                    if (now - lastNavigateAt < NAV_CLICK_THROTTLE_MS) {
+                        return@NavigationBarItem
+                    }
+                    lastNavigateAt = now
+
                     navController.navigate(item.screen.route) {
                         // 弹出到导航图的起始目的地
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -180,3 +286,7 @@ private data class BottomNavItem(
     val unselectedIcon: ImageVector,
     val label: String
 )
+
+private fun screenIndex(route: String?): Int {
+    return Screen.entries.indexOfFirst { it.route == route }
+}
