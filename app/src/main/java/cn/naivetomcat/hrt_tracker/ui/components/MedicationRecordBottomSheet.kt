@@ -795,18 +795,21 @@ private fun SublingualTierSelector(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // 使用连接的分段按钮组显示不同的吸收等级
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
+        val tiers = SublingualTier.values()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
         ) {
-            SublingualTier.values().forEachIndexed { index, tier ->
-                SegmentedButton(
-                    selected = selectedTier == tier,
-                    onClick = { onTierSelected(tier) },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = SublingualTier.values().size
-                    )
+            tiers.forEachIndexed { index, tier ->
+                ToggleButton(
+                    checked = selectedTier == tier,
+                    onCheckedChange = { onTierSelected(tier) },
+                    modifier = Modifier.weight(1f),
+                    shapes = when {
+                        index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        index == tiers.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1225,14 +1228,21 @@ private fun PreviewMedicationRecordBottomSheetEditSublingual() {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier.fillMaxWidth()
+                val previewTiers = listOf("快速" to "~2分钟", "随意" to "~5分钟", "标准" to "~10分钟", "严格" to "~15分钟")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                 ) {
-                    listOf("快速" to "~2分钟", "随意" to "~5分钟", "标准" to "~10分钟", "严格" to "~15分钟").forEachIndexed { index, (name, desc) ->
-                        SegmentedButton(
-                            selected = index == 2,
-                            onClick = {},
-                            shape = SegmentedButtonDefaults.itemShape(index = index, count = 4)
+                    previewTiers.forEachIndexed { index, (name, desc) ->
+                        ToggleButton(
+                            checked = index == 2,
+                            onCheckedChange = {},
+                            modifier = Modifier.weight(1f),
+                            shapes = when {
+                                index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                index == previewTiers.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                            }
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,

@@ -339,7 +339,7 @@ fun MedicationPlanBottomSheet(
 /**
  * 给药途径选择组件
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RouteSelectionSection(
     selectedRoute: Route,
@@ -352,24 +352,26 @@ private fun RouteSelectionSection(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
+        val routes = Route.values().filter { it != Route.PATCH_REMOVE }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
         ) {
-            Route.values().forEachIndexed { index, route ->
-                if (route != Route.PATCH_REMOVE) { // 不显示移除贴片选项
-                    SegmentedButton(
-                        selected = selectedRoute == route,
-                        onClick = { onRouteSelected(route) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = Route.values().size - 1
-                        )
-                    ) {
-                        Text(
-                            text = getRouteDisplayName(route),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+            routes.forEachIndexed { index, route ->
+                ToggleButton(
+                    checked = selectedRoute == route,
+                    onCheckedChange = { onRouteSelected(route) },
+                    modifier = Modifier.weight(1f),
+                    shapes = when {
+                        index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        index == routes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
+                ) {
+                    Text(
+                        text = getRouteDisplayName(route),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }
@@ -379,7 +381,7 @@ private fun RouteSelectionSection(
 /**
  * 药物类型选择组件
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun EsterSelectionSection(
     selectedEster: Ester,
@@ -393,17 +395,20 @@ private fun EsterSelectionSection(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
         ) {
             availableEsters.forEachIndexed { index, ester ->
-                SegmentedButton(
-                    selected = selectedEster == ester,
-                    onClick = { onEsterSelected(ester) },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = availableEsters.size
-                    )
+                ToggleButton(
+                    checked = selectedEster == ester,
+                    onCheckedChange = { onEsterSelected(ester) },
+                    modifier = Modifier.weight(1f),
+                    shapes = when {
+                        index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        index == availableEsters.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
                 ) {
                     Text(
                         text = getEsterDisplayName(ester),
@@ -418,7 +423,7 @@ private fun EsterSelectionSection(
 /**
  * 给药周期类型选择组件
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ScheduleTypeSection(
     selectedType: MedicationPlan.ScheduleType,
@@ -431,18 +436,21 @@ private fun ScheduleTypeSection(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
+        val types = MedicationPlan.ScheduleType.values()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
         ) {
-            val types = MedicationPlan.ScheduleType.values()
             types.forEachIndexed { index, type ->
-                SegmentedButton(
-                    selected = selectedType == type,
-                    onClick = { onTypeSelected(type) },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = types.size
-                    )
+                ToggleButton(
+                    checked = selectedType == type,
+                    onCheckedChange = { onTypeSelected(type) },
+                    modifier = Modifier.weight(1f),
+                    shapes = when {
+                        index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        index == types.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
                 ) {
                     Text(
                         text = when (type) {
@@ -602,7 +610,7 @@ private fun TimePickerDialog(
 /**
  * 舌下吸收等级选择器
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SublingualTierSelector(
     selectedTier: SublingualTier,
@@ -616,17 +624,21 @@ private fun SublingualTierSelector(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
+        val tiers = SublingualTier.values()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
         ) {
-            SublingualTier.values().forEachIndexed { index, tier ->
-                SegmentedButton(
-                    selected = selectedTier == tier,
-                    onClick = { onTierSelected(tier) },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = index,
-                        count = SublingualTier.values().size
-                    )
+            tiers.forEachIndexed { index, tier ->
+                ToggleButton(
+                    checked = selectedTier == tier,
+                    onCheckedChange = { onTierSelected(tier) },
+                    modifier = Modifier.weight(1f),
+                    shapes = when {
+                        index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        index == tiers.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
