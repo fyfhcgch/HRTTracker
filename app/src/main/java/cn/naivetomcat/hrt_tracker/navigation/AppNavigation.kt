@@ -48,7 +48,7 @@ import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.MedicationPlanViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
 
-private const val NAV_SPRING_DAMPING_RATIO = 0.48f
+private const val NAV_SPRING_DAMPING_RATIO = 0.72f
 private const val NAV_SPRING_STIFFNESS = Spring.StiffnessLow
 private const val NAV_CLICK_THROTTLE_MS = 200L
 
