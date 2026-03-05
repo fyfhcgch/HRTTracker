@@ -2,6 +2,7 @@ package cn.naivetomcat.hrt_tracker.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cn.naivetomcat.hrt_tracker.R
@@ -352,26 +355,42 @@ private fun RouteSelectionSection(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        val routes = Route.values().filter { it != Route.PATCH_REMOVE }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-        ) {
+        val routes = Route.values().filter { it != Route.PATCH_REMOVE && it != Route.PATCH_APPLY }
+        ButtonGroup(modifier = Modifier.fillMaxWidth()) {
             routes.forEachIndexed { index, route ->
+                val interactionSource = remember(route) { MutableInteractionSource() }
                 ToggleButton(
                     checked = selectedRoute == route,
                     onCheckedChange = { onRouteSelected(route) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .animateWidth(interactionSource),
+                    interactionSource = interactionSource,
                     shapes = when {
                         index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                         index == routes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
-                    Text(
-                        text = getRouteDisplayName(route),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    val routeText = getRouteDisplayName(route)
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Invisible anchor text forces Box to be exactly 2 lines tall
+                        Text(
+                            text = routeText,
+                            style = MaterialTheme.typography.bodySmall,
+                            minLines = 2,
+                            color = Color.Transparent
+                        )
+                        // Visible text is centered within the 2-line Box
+                        Text(
+                            text = routeText,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -395,25 +414,41 @@ private fun EsterSelectionSection(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-        ) {
+        ButtonGroup(modifier = Modifier.fillMaxWidth()) {
             availableEsters.forEachIndexed { index, ester ->
+                val interactionSource = remember(ester) { MutableInteractionSource() }
                 ToggleButton(
                     checked = selectedEster == ester,
                     onCheckedChange = { onEsterSelected(ester) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .animateWidth(interactionSource),
+                    interactionSource = interactionSource,
                     shapes = when {
                         index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                         index == availableEsters.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
-                    Text(
-                        text = getEsterDisplayName(ester),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    val esterText = ester.name
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Invisible anchor text forces Box to be exactly 2 lines tall
+                        Text(
+                            text = esterText,
+                            style = MaterialTheme.typography.bodySmall,
+                            minLines = 2,
+                            color = Color.Transparent
+                        )
+                        // Visible text is centered within the 2-line Box
+                        Text(
+                            text = esterText,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -437,29 +472,45 @@ private fun ScheduleTypeSection(
         )
         Spacer(modifier = Modifier.height(8.dp))
         val types = MedicationPlan.ScheduleType.values()
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-        ) {
+        ButtonGroup(modifier = Modifier.fillMaxWidth()) {
             types.forEachIndexed { index, type ->
+                val interactionSource = remember(type) { MutableInteractionSource() }
                 ToggleButton(
                     checked = selectedType == type,
                     onCheckedChange = { onTypeSelected(type) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .animateWidth(interactionSource),
+                    interactionSource = interactionSource,
                     shapes = when {
                         index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                         index == types.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
-                    Text(
-                        text = when (type) {
-                            MedicationPlan.ScheduleType.DAILY -> stringResource(R.string.plan_sheet_schedule_daily)
-                            MedicationPlan.ScheduleType.WEEKLY -> stringResource(R.string.plan_sheet_schedule_weekly)
-                            MedicationPlan.ScheduleType.CUSTOM -> stringResource(R.string.plan_sheet_schedule_custom)
-                        },
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    val scheduleText = when (type) {
+                        MedicationPlan.ScheduleType.DAILY -> stringResource(R.string.plan_sheet_schedule_daily)
+                        MedicationPlan.ScheduleType.WEEKLY -> stringResource(R.string.plan_sheet_schedule_weekly)
+                        MedicationPlan.ScheduleType.CUSTOM -> stringResource(R.string.plan_sheet_schedule_custom)
+                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Invisible anchor text forces Box to be exactly 2 lines tall
+                        Text(
+                            text = scheduleText,
+                            style = MaterialTheme.typography.bodySmall,
+                            minLines = 2,
+                            color = Color.Transparent
+                        )
+                        // Visible text is centered within the 2-line Box
+                        Text(
+                            text = scheduleText,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -625,15 +676,16 @@ private fun SublingualTierSelector(
         Spacer(modifier = Modifier.height(8.dp))
 
         val tiers = SublingualTier.values()
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-        ) {
+        ButtonGroup(modifier = Modifier.fillMaxWidth()) {
             tiers.forEachIndexed { index, tier ->
+                val interactionSource = remember(tier) { MutableInteractionSource() }
                 ToggleButton(
                     checked = selectedTier == tier,
                     onCheckedChange = { onTierSelected(tier) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .animateWidth(interactionSource),
+                    interactionSource = interactionSource,
                     shapes = when {
                         index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                         index == tiers.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
