@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cn.naivetomcat.hrt_tracker.R
@@ -371,14 +372,22 @@ private fun RouteSelectionSection(
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
+                    val routeText = getRouteDisplayName(route)
                     Box(
-                        modifier = Modifier.fillMaxHeight(),
+                        modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
+                        // Invisible anchor text forces Box to be exactly 2 lines tall
                         Text(
-                            text = getRouteDisplayName(route),
+                            text = routeText,
                             style = MaterialTheme.typography.bodySmall,
                             minLines = 2,
+                            color = Color.Transparent
+                        )
+                        // Visible text is centered within the 2-line Box
+                        Text(
+                            text = routeText,
+                            style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -421,14 +430,22 @@ private fun EsterSelectionSection(
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
+                    val esterText = getEsterDisplayName(ester)
                     Box(
-                        modifier = Modifier.fillMaxHeight(),
+                        modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
+                        // Invisible anchor text forces Box to be exactly 2 lines tall
                         Text(
-                            text = getEsterDisplayName(ester),
+                            text = esterText,
                             style = MaterialTheme.typography.bodySmall,
                             minLines = 2,
+                            color = Color.Transparent
+                        )
+                        // Visible text is centered within the 2-line Box
+                        Text(
+                            text = esterText,
+                            style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -471,18 +488,26 @@ private fun ScheduleTypeSection(
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
+                    val scheduleText = when (type) {
+                        MedicationPlan.ScheduleType.DAILY -> stringResource(R.string.plan_sheet_schedule_daily)
+                        MedicationPlan.ScheduleType.WEEKLY -> stringResource(R.string.plan_sheet_schedule_weekly)
+                        MedicationPlan.ScheduleType.CUSTOM -> stringResource(R.string.plan_sheet_schedule_custom)
+                    }
                     Box(
-                        modifier = Modifier.fillMaxHeight(),
+                        modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
+                        // Invisible anchor text forces Box to be exactly 2 lines tall
                         Text(
-                            text = when (type) {
-                                MedicationPlan.ScheduleType.DAILY -> stringResource(R.string.plan_sheet_schedule_daily)
-                                MedicationPlan.ScheduleType.WEEKLY -> stringResource(R.string.plan_sheet_schedule_weekly)
-                                MedicationPlan.ScheduleType.CUSTOM -> stringResource(R.string.plan_sheet_schedule_custom)
-                            },
+                            text = scheduleText,
                             style = MaterialTheme.typography.bodySmall,
                             minLines = 2,
+                            color = Color.Transparent
+                        )
+                        // Visible text is centered within the 2-line Box
+                        Text(
+                            text = scheduleText,
+                            style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
                     }
