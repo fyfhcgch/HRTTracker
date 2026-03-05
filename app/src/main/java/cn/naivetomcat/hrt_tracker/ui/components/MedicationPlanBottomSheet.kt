@@ -371,12 +371,17 @@ private fun RouteSelectionSection(
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
-                    Text(
-                        text = getRouteDisplayName(route),
-                        style = MaterialTheme.typography.bodySmall,
-                        minLines = 2,
-                        textAlign = TextAlign.Center
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = getRouteDisplayName(route),
+                            style = MaterialTheme.typography.bodySmall,
+                            minLines = 2,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -416,12 +421,17 @@ private fun EsterSelectionSection(
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
-                    Text(
-                        text = getEsterDisplayName(ester),
-                        style = MaterialTheme.typography.bodySmall,
-                        minLines = 2,
-                        textAlign = TextAlign.Center
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = getEsterDisplayName(ester),
+                            style = MaterialTheme.typography.bodySmall,
+                            minLines = 2,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -461,16 +471,21 @@ private fun ScheduleTypeSection(
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
                 ) {
-                    Text(
-                        text = when (type) {
-                            MedicationPlan.ScheduleType.DAILY -> stringResource(R.string.plan_sheet_schedule_daily)
-                            MedicationPlan.ScheduleType.WEEKLY -> stringResource(R.string.plan_sheet_schedule_weekly)
-                            MedicationPlan.ScheduleType.CUSTOM -> stringResource(R.string.plan_sheet_schedule_custom)
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        minLines = 2,
-                        textAlign = TextAlign.Center
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = when (type) {
+                                MedicationPlan.ScheduleType.DAILY -> stringResource(R.string.plan_sheet_schedule_daily)
+                                MedicationPlan.ScheduleType.WEEKLY -> stringResource(R.string.plan_sheet_schedule_weekly)
+                                MedicationPlan.ScheduleType.CUSTOM -> stringResource(R.string.plan_sheet_schedule_custom)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            minLines = 2,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
