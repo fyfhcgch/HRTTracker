@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -47,6 +50,7 @@ import cn.naivetomcat.hrt_tracker.ui.screens.SettingsScreen
 import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.MedicationPlanViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
+import cn.naivetomcat.hrt_tracker.viewmodel.UpdateCheckResult
 
 private const val NAV_SPRING_DAMPING_RATIO = 0.72f
 private const val NAV_SPRING_STIFFNESS = Spring.StiffnessLow
@@ -63,6 +67,49 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     var navDirection by remember { mutableIntStateOf(1) }
+    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
+    val updateCheckResult by settingsViewModel.updateCheckResult.collectAsState()
+
+    @Suppress("DEPRECATION")
+    val versionName = remember {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
+        } catch (e: Exception) { "" }
+    }
+
+    // 应用启动时自动检查更新
+    LaunchedEffect(Unit) {
+        settingsViewModel.triggerAutoCheckOnStartup(versionName)
+    }
+
+    // 有新版本时显示更新弹窗
+    if (updateCheckResult is UpdateCheckResult.UpdateAvailable) {
+        val result = updateCheckResult as UpdateCheckResult.UpdateAvailable
+        AlertDialog(
+            onDismissRequest = { settingsViewModel.dismissUpdateCheckResult() },
+            title = { Text(stringResource(R.string.update_available_title)) },
+            text = {
+                Text(stringResource(R.string.update_available_content, result.tagName))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        uriHandler.openUri(result.releaseUrl)
+                        settingsViewModel.dismissUpdateCheckResult()
+                    }
+                ) {
+                    Text(stringResource(R.string.update_go_to_release))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { settingsViewModel.dismissUpdateCheckResult() }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing.only(
             WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
@@ -186,7 +233,10 @@ fun AppNavigation(
                     settings = settings,
                     onBodyWeightChange = settingsViewModel::updateBodyWeight,
                     onThemeModeChange = settingsViewModel::updateThemeMode,
-                    onColorThemeChange = settingsViewModel::updateColorTheme
+                    onColorThemeChange = settingsViewModel::updateColorTheme,
+                    onAutoCheckUpdatesChange = settingsViewModel::updateAutoCheckUpdates,
+                    onCheckForUpdates = { settingsViewModel.checkForUpdates(versionName) },
+                    updateCheckResult = updateCheckResult
                 )
             }
         }
