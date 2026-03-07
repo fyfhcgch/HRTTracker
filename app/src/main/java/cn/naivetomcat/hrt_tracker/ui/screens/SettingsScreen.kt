@@ -5,12 +5,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +29,7 @@ import cn.naivetomcat.hrt_tracker.data.ColorTheme
 import cn.naivetomcat.hrt_tracker.data.ThemeMode
 import cn.naivetomcat.hrt_tracker.data.UserSettings
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
+import cn.naivetomcat.hrt_tracker.viewmodel.UpdateCheckResult
 
 /**
  * 设置页面
@@ -36,7 +40,10 @@ fun SettingsScreen(
     settings: UserSettings,
     onBodyWeightChange: (Double) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
-    onColorThemeChange: (ColorTheme) -> Unit
+    onColorThemeChange: (ColorTheme) -> Unit,
+    onAutoCheckUpdatesChange: (Boolean) -> Unit,
+    onCheckForUpdates: () -> Unit,
+    updateCheckResult: UpdateCheckResult
 ) {
     var showCopyrightDialog by remember { mutableStateOf(false) }
     var showDisclaimerDialog by remember { mutableStateOf(false) }
@@ -76,6 +83,14 @@ fun SettingsScreen(
             ColorThemeSection(
                 currentTheme = settings.colorTheme,
                 onThemeChange = onColorThemeChange
+            )
+
+            // 检查更新
+            UpdateSection(
+                autoCheckUpdates = settings.autoCheckUpdates,
+                onAutoCheckUpdatesChange = onAutoCheckUpdatesChange,
+                onCheckForUpdates = onCheckForUpdates,
+                updateCheckResult = updateCheckResult
             )
 
             AboutSection(
@@ -306,6 +321,106 @@ private fun ColorThemeSection(
     }
 }
 
+/**
+ * 检查更新部分
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun UpdateSection(
+    autoCheckUpdates: Boolean,
+    onAutoCheckUpdatesChange: (Boolean) -> Unit,
+    onCheckForUpdates: () -> Unit,
+    updateCheckResult: UpdateCheckResult
+) {
+    val isChecking = updateCheckResult is UpdateCheckResult.Checking
+    val checkingStatusText = when (updateCheckResult) {
+        is UpdateCheckResult.Checking -> stringResource(R.string.update_checking)
+        is UpdateCheckResult.UpToDate -> stringResource(R.string.update_up_to_date)
+        is UpdateCheckResult.Error -> stringResource(R.string.update_check_error)
+        else -> null
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.settings_update_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            // 自动检查更新开关
+            SegmentedListItem(
+                onClick = { onAutoCheckUpdatesChange(!autoCheckUpdates) },
+                shapes = ListItemDefaults.segmentedShapes(index = 0, count = 2),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.SystemUpdate,
+                        contentDescription = null
+                    )
+                },
+                trailingContent = {
+                    Switch(
+                        checked = autoCheckUpdates,
+                        onCheckedChange = onAutoCheckUpdatesChange,
+                        thumbContent = if (autoCheckUpdates) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                                )
+                            }
+                        } else {
+                            null
+                        }
+                    )
+                }
+            ) {
+                Text(stringResource(R.string.settings_auto_check_updates))
+            }
+
+            // 检查更新按钮
+            SegmentedListItem(
+                onClick = { if (!isChecking) onCheckForUpdates() },
+                shapes = ListItemDefaults.segmentedShapes(index = 1, count = 2),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    if (isChecking) {
+                        LoadingIndicator(
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Refresh,
+                            contentDescription = null
+                        )
+                    }
+                },
+                supportingContent = checkingStatusText?.let { { Text(it) } }
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_check_updates_now),
+                    color = if (isChecking) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    else MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AboutSection(
@@ -375,7 +490,10 @@ private fun SettingsScreenPreview() {
             ),
             onBodyWeightChange = {},
             onThemeModeChange = {},
-            onColorThemeChange = {}
+            onColorThemeChange = {},
+            onAutoCheckUpdatesChange = {},
+            onCheckForUpdates = {},
+            updateCheckResult = UpdateCheckResult.Idle
         )
     }
 }
@@ -392,7 +510,10 @@ private fun SettingsScreenDarkPreview() {
             ),
             onBodyWeightChange = {},
             onThemeModeChange = {},
-            onColorThemeChange = {}
+            onColorThemeChange = {},
+            onAutoCheckUpdatesChange = {},
+            onCheckForUpdates = {},
+            updateCheckResult = UpdateCheckResult.Idle
         )
     }
 }

@@ -3,6 +3,7 @@ package cn.naivetomcat.hrt_tracker.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -36,7 +37,8 @@ enum class ColorTheme {
 data class UserSettings(
     val bodyWeight: Double = 55.0,           // 默认体重 55kg
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val colorTheme: ColorTheme = ColorTheme.DYNAMIC
+    val colorTheme: ColorTheme = ColorTheme.DYNAMIC,
+    val autoCheckUpdates: Boolean = true     // 默认开启自动检查更新
 )
 
 /**
@@ -48,6 +50,7 @@ class SettingsDataStore(private val context: Context) {
         private val BODY_WEIGHT_KEY = doublePreferencesKey("body_weight")
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         private val COLOR_THEME_KEY = stringPreferencesKey("color_theme")
+        private val AUTO_CHECK_UPDATES_KEY = booleanPreferencesKey("auto_check_updates")
     }
     
     /**
@@ -69,7 +72,8 @@ class SettingsDataStore(private val context: Context) {
                 } catch (e: IllegalArgumentException) {
                     ColorTheme.DYNAMIC
                 }
-            } ?: ColorTheme.DYNAMIC
+            } ?: ColorTheme.DYNAMIC,
+            autoCheckUpdates = preferences[AUTO_CHECK_UPDATES_KEY] ?: true
         )
     }
     
@@ -97,6 +101,15 @@ class SettingsDataStore(private val context: Context) {
     suspend fun updateColorTheme(theme: ColorTheme) {
         context.dataStore.edit { preferences ->
             preferences[COLOR_THEME_KEY] = theme.name
+        }
+    }
+
+    /**
+     * 保存自动检查更新开关
+     */
+    suspend fun updateAutoCheckUpdates(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[AUTO_CHECK_UPDATES_KEY] = enabled
         }
     }
 }
