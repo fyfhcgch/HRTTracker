@@ -33,6 +33,7 @@ import java.util.UUID
 @Composable
 fun MedicationPlansScreen(
     viewModel: MedicationPlanViewModel,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val plans by viewModel.plans.collectAsState()
@@ -72,7 +73,8 @@ fun MedicationPlansScreen(
             showBottomSheet = false
             planToEdit = null
         },
-        planToEdit = planToEdit
+        planToEdit = planToEdit,
+        is24Hour = is24Hour
     )
 }
 

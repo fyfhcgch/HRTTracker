@@ -1,6 +1,7 @@
 package cn.naivetomcat.hrt_tracker.navigation
 
 import android.os.SystemClock
+import android.text.format.DateFormat
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.EnterTransition
@@ -43,6 +44,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cn.naivetomcat.hrt_tracker.R
+import cn.naivetomcat.hrt_tracker.data.TimeFormat
 import cn.naivetomcat.hrt_tracker.ui.screens.HomeScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.MedicationPlansScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.MedicationRecordsScreen
@@ -70,6 +72,14 @@ fun AppNavigation(
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val updateCheckResult by settingsViewModel.updateCheckResult.collectAsState()
+    val userSettings by settingsViewModel.userSettings.collectAsState()
+
+    // 根据用户设置和设备语言区域计算是否使用24小时制
+    val is24Hour = when (userSettings.timeFormat) {
+        TimeFormat.SYSTEM -> DateFormat.is24HourFormat(context)
+        TimeFormat.HOUR_12 -> false
+        TimeFormat.HOUR_24 -> true
+    }
 
     @Suppress("DEPRECATION")
     val versionName = remember {
@@ -219,21 +229,21 @@ fun AppNavigation(
             },
         ) {
             composable(Screen.HOME.route) {
-                HomeScreen(viewModel = hrtViewModel)
+                HomeScreen(viewModel = hrtViewModel, is24Hour = is24Hour)
             }
             composable(Screen.RECORDS.route) {
-                MedicationRecordsScreen(viewModel = hrtViewModel)
+                MedicationRecordsScreen(viewModel = hrtViewModel, is24Hour = is24Hour)
             }
             composable(Screen.MEDICATION_PLANS.route) {
-                MedicationPlansScreen(viewModel = medicationPlanViewModel)
+                MedicationPlansScreen(viewModel = medicationPlanViewModel, is24Hour = is24Hour)
             }
             composable(Screen.SETTINGS.route) {
-                val settings by settingsViewModel.userSettings.collectAsState()
                 SettingsScreen(
-                    settings = settings,
+                    settings = userSettings,
                     onBodyWeightChange = settingsViewModel::updateBodyWeight,
                     onThemeModeChange = settingsViewModel::updateThemeMode,
                     onColorThemeChange = settingsViewModel::updateColorTheme,
+                    onTimeFormatChange = settingsViewModel::updateTimeFormat,
                     onAutoCheckUpdatesChange = settingsViewModel::updateAutoCheckUpdates,
                     onCheckForUpdates = { settingsViewModel.checkForUpdates(versionName) },
                     updateCheckResult = updateCheckResult

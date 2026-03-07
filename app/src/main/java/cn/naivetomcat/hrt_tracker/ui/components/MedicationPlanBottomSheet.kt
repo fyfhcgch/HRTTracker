@@ -39,7 +39,8 @@ fun MedicationPlanBottomSheet(
     onDismiss: () -> Unit,
     onSave: (MedicationPlan) -> Unit,
     onDelete: ((UUID) -> Unit)? = null,
-    planToEdit: MedicationPlan? = null
+    planToEdit: MedicationPlan? = null,
+    is24Hour: Boolean = true
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -240,7 +241,8 @@ fun MedicationPlanBottomSheet(
                     onEditTime = { index ->
                         timeIndexToEdit = index
                         showTimePicker = true
-                    }
+                    },
+                    is24Hour = is24Hour
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -321,7 +323,7 @@ fun MedicationPlanBottomSheet(
         val timePickerState = rememberTimePickerState(
             initialHour = timeOfDay.getOrNull(timeIndexToEdit)?.hour ?: 9,
             initialMinute = timeOfDay.getOrNull(timeIndexToEdit)?.minute ?: 0,
-            is24Hour = true
+            is24Hour = is24Hour
         )
 
         TimePickerDialog(
@@ -566,7 +568,8 @@ private fun TimeOfDaySection(
     times: List<LocalTime>,
     onAddTime: () -> Unit,
     onRemoveTime: (Int) -> Unit,
-    onEditTime: (Int) -> Unit
+    onEditTime: (Int) -> Unit,
+    is24Hour: Boolean = true
 ) {
     Column {
         Row(
@@ -609,7 +612,9 @@ private fun TimeOfDaySection(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                            text = time.format(
+                                DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "hh:mm a")
+                            ),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }

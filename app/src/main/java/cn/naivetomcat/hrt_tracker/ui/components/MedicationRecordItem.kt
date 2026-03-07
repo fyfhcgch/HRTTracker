@@ -41,6 +41,7 @@ fun MedicationRecordItem(
     route: Route,
     doseMG: Double,
     timeH: Double,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
@@ -82,7 +83,7 @@ fun MedicationRecordItem(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
-                        text = formatTime(timeH),
+                        text = formatTime(timeH, is24Hour),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -108,12 +109,13 @@ private fun formatDose(doseMG: Double): String {
 }
 
 /**
- * 格式化时间显示（HH:mm）
+ * 格式化时间显示
  */
-private fun formatTime(timeH: Double): String {
+private fun formatTime(timeH: Double, is24Hour: Boolean): String {
     val milliseconds = (timeH * 3600 * 1000).toLong()
     val date = Date(milliseconds)
-    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val pattern = if (is24Hour) "HH:mm" else "hh:mm a"
+    val sdf = SimpleDateFormat(pattern, Locale.getDefault())
     return sdf.format(date)
 }
 
@@ -133,6 +135,7 @@ private fun formatDate(timeH: Double): String {
 @Composable
 fun MedicationRecordItem(
     event: DoseEvent,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
@@ -143,6 +146,7 @@ fun MedicationRecordItem(
         route = event.route,
         doseMG = event.doseMG,
         timeH = event.timeH,
+        is24Hour = is24Hour,
         modifier = modifier,
         onClick = onClick
     )

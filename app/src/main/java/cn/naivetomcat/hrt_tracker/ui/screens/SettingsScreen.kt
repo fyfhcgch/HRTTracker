@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.data.ColorTheme
 import cn.naivetomcat.hrt_tracker.data.ThemeMode
+import cn.naivetomcat.hrt_tracker.data.TimeFormat
 import cn.naivetomcat.hrt_tracker.data.UserSettings
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
 import cn.naivetomcat.hrt_tracker.viewmodel.UpdateCheckResult
@@ -41,6 +43,7 @@ fun SettingsScreen(
     onBodyWeightChange: (Double) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
     onColorThemeChange: (ColorTheme) -> Unit,
+    onTimeFormatChange: (TimeFormat) -> Unit,
     onAutoCheckUpdatesChange: (Boolean) -> Unit,
     onCheckForUpdates: () -> Unit,
     updateCheckResult: UpdateCheckResult
@@ -83,6 +86,12 @@ fun SettingsScreen(
             ColorThemeSection(
                 currentTheme = settings.colorTheme,
                 onThemeChange = onColorThemeChange
+            )
+
+            // 时间制式选择
+            TimeFormatSection(
+                currentFormat = settings.timeFormat,
+                onFormatChange = onTimeFormatChange
             )
 
             // 检查更新
@@ -326,6 +335,78 @@ private fun ColorThemeSection(
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
+private fun TimeFormatSection(
+    currentFormat: TimeFormat,
+    onFormatChange: (TimeFormat) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.settings_time_format_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            TimeFormat.entries.forEachIndexed { index, format ->
+                val label = when (format) {
+                    TimeFormat.SYSTEM -> stringResource(R.string.settings_time_format_system)
+                    TimeFormat.HOUR_12 -> stringResource(R.string.settings_time_format_12h)
+                    TimeFormat.HOUR_24 -> stringResource(R.string.settings_time_format_24h)
+                }
+                val description = when (format) {
+                    TimeFormat.SYSTEM -> stringResource(R.string.settings_time_format_system_desc)
+                    TimeFormat.HOUR_12 -> stringResource(R.string.settings_time_format_12h_desc)
+                    TimeFormat.HOUR_24 -> stringResource(R.string.settings_time_format_24h_desc)
+                }
+                val icon = when (format) {
+                    TimeFormat.SYSTEM -> Icons.Outlined.PhoneAndroid
+                    TimeFormat.HOUR_12 -> Icons.Outlined.Schedule
+                    TimeFormat.HOUR_24 -> Icons.Outlined.Schedule
+                }
+
+                SegmentedListItem(
+                    selected = currentFormat == format,
+                    onClick = { onFormatChange(format) },
+                    shapes = ListItemDefaults.segmentedShapes(
+                        index = index,
+                        count = TimeFormat.entries.size
+                    ),
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    leadingContent = {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null
+                        )
+                    },
+                    trailingContent = {
+                        RadioButton(
+                            selected = currentFormat == format,
+                            onClick = null
+                        )
+                    },
+                    supportingContent = { Text(description) }
+                ) {
+                    Text(label)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 检查更新部分
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
 private fun UpdateSection(
     autoCheckUpdates: Boolean,
     onAutoCheckUpdatesChange: (Boolean) -> Unit,
@@ -491,6 +572,7 @@ private fun SettingsScreenPreview() {
             onBodyWeightChange = {},
             onThemeModeChange = {},
             onColorThemeChange = {},
+            onTimeFormatChange = {},
             onAutoCheckUpdatesChange = {},
             onCheckForUpdates = {},
             updateCheckResult = UpdateCheckResult.Idle
@@ -511,6 +593,7 @@ private fun SettingsScreenDarkPreview() {
             onBodyWeightChange = {},
             onThemeModeChange = {},
             onColorThemeChange = {},
+            onTimeFormatChange = {},
             onAutoCheckUpdatesChange = {},
             onCheckForUpdates = {},
             updateCheckResult = UpdateCheckResult.Idle

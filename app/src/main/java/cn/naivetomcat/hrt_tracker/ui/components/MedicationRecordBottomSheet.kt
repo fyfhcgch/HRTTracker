@@ -56,7 +56,8 @@ fun MedicationRecordBottomSheet(
     onSave: (DoseEvent) -> Unit,
     onDelete: ((UUID) -> Unit)? = null,
     eventToEdit: DoseEvent? = null,
-    defaults: RecordDefaults? = null
+    defaults: RecordDefaults? = null,
+    is24Hour: Boolean = true
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -200,7 +201,8 @@ fun MedicationRecordBottomSheet(
                 DateTimeSection(
                     selectedDateTime = selectedDateTime,
                     onDateClick = { showDatePicker = true },
-                    onTimeClick = { showTimePicker = true }
+                    onTimeClick = { showTimePicker = true },
+                    is24Hour = is24Hour
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -393,7 +395,7 @@ fun MedicationRecordBottomSheet(
         val timePickerState = rememberTimePickerState(
             initialHour = selectedDateTime.hours,
             initialMinute = selectedDateTime.minutes,
-            is24Hour = true
+            is24Hour = is24Hour
         )
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
@@ -429,7 +431,8 @@ fun MedicationRecordBottomSheet(
 private fun DateTimeSection(
     selectedDateTime: Date,
     onDateClick: () -> Unit,
-    onTimeClick: () -> Unit
+    onTimeClick: () -> Unit,
+    is24Hour: Boolean = true
 ) {
     Column {
         Text(
@@ -484,7 +487,10 @@ private fun DateTimeSection(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = SimpleDateFormat("HH:mm", LocalLocale.current.platformLocale).format(selectedDateTime),
+                        text = SimpleDateFormat(
+                            if (is24Hour) "HH:mm" else "hh:mm a",
+                            LocalLocale.current.platformLocale
+                        ).format(selectedDateTime),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }

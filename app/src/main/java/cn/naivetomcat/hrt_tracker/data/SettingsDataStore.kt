@@ -32,13 +32,23 @@ enum class ColorTheme {
 }
 
 /**
+ * 时间制式枚举
+ */
+enum class TimeFormat {
+    SYSTEM,     // 跟随系统设置
+    HOUR_12,    // 12小时制
+    HOUR_24     // 24小时制
+}
+
+/**
  * 用户设置数据类
  */
 data class UserSettings(
     val bodyWeight: Double = 55.0,           // 默认体重 55kg
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val colorTheme: ColorTheme = ColorTheme.DYNAMIC,
-    val autoCheckUpdates: Boolean = true     // 默认开启自动检查更新
+    val autoCheckUpdates: Boolean = true,    // 默认开启自动检查更新
+    val timeFormat: TimeFormat = TimeFormat.SYSTEM  // 默认跟随系统时间制式
 )
 
 /**
@@ -51,6 +61,7 @@ class SettingsDataStore(private val context: Context) {
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         private val COLOR_THEME_KEY = stringPreferencesKey("color_theme")
         private val AUTO_CHECK_UPDATES_KEY = booleanPreferencesKey("auto_check_updates")
+        private val TIME_FORMAT_KEY = stringPreferencesKey("time_format")
     }
     
     /**
@@ -73,7 +84,14 @@ class SettingsDataStore(private val context: Context) {
                     ColorTheme.DYNAMIC
                 }
             } ?: ColorTheme.DYNAMIC,
-            autoCheckUpdates = preferences[AUTO_CHECK_UPDATES_KEY] ?: true
+            autoCheckUpdates = preferences[AUTO_CHECK_UPDATES_KEY] ?: true,
+            timeFormat = preferences[TIME_FORMAT_KEY]?.let {
+                try {
+                    TimeFormat.valueOf(it)
+                } catch (e: IllegalArgumentException) {
+                    TimeFormat.SYSTEM
+                }
+            } ?: TimeFormat.SYSTEM
         )
     }
     
@@ -110,6 +128,15 @@ class SettingsDataStore(private val context: Context) {
     suspend fun updateAutoCheckUpdates(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[AUTO_CHECK_UPDATES_KEY] = enabled
+        }
+    }
+
+    /**
+     * 保存时间制式
+     */
+    suspend fun updateTimeFormat(format: TimeFormat) {
+        context.dataStore.edit { preferences ->
+            preferences[TIME_FORMAT_KEY] = format.name
         }
     }
 }

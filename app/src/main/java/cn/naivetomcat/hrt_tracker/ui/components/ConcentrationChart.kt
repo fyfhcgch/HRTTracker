@@ -61,6 +61,7 @@ fun ConcentrationChart(
     currentTimeH: Double,
     doseTimePoints: List<Double>,
     forkPointTimeH: Double? = null,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -535,7 +536,10 @@ fun ConcentrationChart(
         )
 
         // X轴标签
-        val dateFormat = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat(
+            if (is24Hour) "MM/dd HH:mm" else "MM/dd hh:mm a",
+            Locale.getDefault()
+        )
         // 计算可见时间范围
         val visibleTimeStart = timeMin - (offsetX / (chartWidth * scaleX)) * (timeMax - timeMin)
         val visibleTimeEnd = visibleTimeStart + (timeMax - timeMin) / scaleX
@@ -570,7 +574,10 @@ fun ConcentrationChart(
         // 显示浮动信息窗口
         selectedPoint?.let { (time, conc) ->
             touchPosition?.let { pos ->
-                val dateFormat = SimpleDateFormat("MM/dd HH:mm", LocalLocale.current.platformLocale)
+                val dateFormat = SimpleDateFormat(
+                    if (is24Hour) "MM/dd HH:mm" else "MM/dd hh:mm a",
+                    LocalLocale.current.platformLocale
+                )
                 val timeMillis = (time * 3600000).toLong()
                 val timeText = dateFormat.format(Date(timeMillis))
                 val concText = "%.1f pg/mL".format(conc)
