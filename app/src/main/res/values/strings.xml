@@ -22,6 +22,14 @@
     <string name="settings_color_theme_dynamic_desc">跟随系统动态着色 (Android 12+)</string>
     <string name="settings_color_theme_builtin_desc">使用应用内置配色方案</string>
 
+    <string name="settings_time_format_title">时间制式</string>
+    <string name="settings_time_format_system">跟随系统</string>
+    <string name="settings_time_format_12h">12小时制</string>
+    <string name="settings_time_format_24h">24小时制</string>
+    <string name="settings_time_format_system_desc">根据设备语言区域自动选择</string>
+    <string name="settings_time_format_12h_desc">始终使用12小时制</string>
+    <string name="settings_time_format_24h_desc">始终使用24小时制</string>
+
     <string name="about_section_title">关于</string>
     <string name="about_copyright_button">版权信息</string>
     <string name="about_disclaimer_button">免责声明</string>

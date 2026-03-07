@@ -38,6 +38,7 @@ import kotlin.math.abs
 @Composable
 fun HomeScreen(
     viewModel: HRTViewModel,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val pkState by viewModel.pkState.collectAsState()
@@ -51,6 +52,7 @@ fun HomeScreen(
         enabledPlans = enabledPlans,
         realtimeCurrentTimeH = realtimeCurrentTimeH,
         onRefresh = { viewModel.runSimulation() },
+        is24Hour = is24Hour,
         modifier = modifier
     )
 }
@@ -66,6 +68,7 @@ private fun HomeScreenContent(
     enabledPlans: List<MedicationPlan>,
     realtimeCurrentTimeH: Double,
     onRefresh: () -> Unit,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     // 计算分叉点时间：未来第一次计划用药的时间
@@ -215,7 +218,8 @@ private fun HomeScreenContent(
                         baselineSimulationResult = pkState.baselineSimulationResult,
                         currentTimeH = realtimeCurrentTimeH,
                         doseTimePoints = doseTimePoints,
-                        forkPointTimeH = forkPointTimeH
+                        forkPointTimeH = forkPointTimeH,
+                        is24Hour = is24Hour
                     )
 
                     // 浓度等级说明
@@ -295,7 +299,8 @@ private fun ChartCard(
     baselineSimulationResult: SimulationResult?,
     currentTimeH: Double,
     doseTimePoints: List<Double>,
-    forkPointTimeH: Double? = null
+    forkPointTimeH: Double? = null,
+    is24Hour: Boolean = true
 ) {
     Card(
         modifier = Modifier
@@ -317,6 +322,7 @@ private fun ChartCard(
                 currentTimeH = currentTimeH,
                 doseTimePoints = doseTimePoints,
                 forkPointTimeH = forkPointTimeH,
+                is24Hour = is24Hour,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)

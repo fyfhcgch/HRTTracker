@@ -7,6 +7,7 @@ import android.util.Log
 import cn.naivetomcat.hrt_tracker.data.ColorTheme
 import cn.naivetomcat.hrt_tracker.data.SettingsDataStore
 import cn.naivetomcat.hrt_tracker.data.ThemeMode
+import cn.naivetomcat.hrt_tracker.data.TimeFormat
 import cn.naivetomcat.hrt_tracker.data.UserSettings
 import cn.naivetomcat.hrt_tracker.utils.UpdateChecker
 import kotlinx.coroutines.Dispatchers
@@ -91,6 +92,15 @@ class SettingsViewModel(
     fun updateAutoCheckUpdates(enabled: Boolean) {
         viewModelScope.launch {
             settingsDataStore.updateAutoCheckUpdates(enabled)
+        }
+    }
+
+    /**
+     * 更新时间制式
+     */
+    fun updateTimeFormat(format: TimeFormat) {
+        viewModelScope.launch {
+            settingsDataStore.updateTimeFormat(format)
         }
     }
 

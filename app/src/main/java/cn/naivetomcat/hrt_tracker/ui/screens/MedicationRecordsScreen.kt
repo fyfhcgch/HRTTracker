@@ -40,6 +40,7 @@ import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
 @Composable
 fun MedicationRecordsScreen(
     viewModel: HRTViewModel,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val events by viewModel.events.collectAsState()
@@ -70,6 +71,7 @@ fun MedicationRecordsScreen(
             viewModel.upsertEvent(quickEvent)
             recordDefaults = quickEvent.toRecordDefaults()
         },
+        is24Hour = is24Hour,
         modifier = modifier
     )
 
@@ -99,7 +101,8 @@ fun MedicationRecordsScreen(
             eventToEdit = null
         },
         eventToEdit = eventToEdit,
-        defaults = recordDefaults
+        defaults = recordDefaults,
+        is24Hour = is24Hour
     )
 }
 
@@ -119,6 +122,7 @@ private fun MedicationRecordsScreenContent(
     onEventClick: (DoseEvent) -> Unit,
     onAddClick: () -> Unit,
     onQuickAddFromPlan: (MedicationPlan) -> Unit,
+    is24Hour: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var fabMenuExpanded by remember { mutableStateOf(false) }
@@ -268,6 +272,7 @@ private fun MedicationRecordsScreenContent(
                 ) { event ->
                     MedicationRecordItem(
                         event = event,
+                        is24Hour = is24Hour,
                         onClick = { onEventClick(event) }
                     )
                 }
