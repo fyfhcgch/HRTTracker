@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.PhoneAndroid
@@ -370,7 +371,18 @@ private fun UpdateSection(
                 trailingContent = {
                     Switch(
                         checked = autoCheckUpdates,
-                        onCheckedChange = onAutoCheckUpdatesChange
+                        onCheckedChange = onAutoCheckUpdatesChange,
+                        thumbContent = if (autoCheckUpdates) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                                )
+                            }
+                        } else {
+                            null
+                        }
                     )
                 }
             ) {
