@@ -6,7 +6,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.ColorLens
@@ -15,6 +18,7 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SystemUpdate
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +35,7 @@ import cn.naivetomcat.hrt_tracker.data.ThemeMode
 import cn.naivetomcat.hrt_tracker.data.TimeFormat
 import cn.naivetomcat.hrt_tracker.data.UserSettings
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
+import cn.naivetomcat.hrt_tracker.viewmodel.ImportResult
 import cn.naivetomcat.hrt_tracker.viewmodel.UpdateCheckResult
 
 /**
@@ -46,10 +51,26 @@ fun SettingsScreen(
     onTimeFormatChange: (TimeFormat) -> Unit,
     onAutoCheckUpdatesChange: (Boolean) -> Unit,
     onCheckForUpdates: () -> Unit,
-    updateCheckResult: UpdateCheckResult
+    updateCheckResult: UpdateCheckResult,
+    onImportClick: () -> Unit = {},
+    onImportFromClipboard: () -> Unit = {},
+    onExportClick: () -> Unit = {},
+    onExportToClipboard: () -> Unit = {},
+    importResult: ImportResult = ImportResult.Idle,
+    onDismissImportResult: () -> Unit = {},
+    clipboardExportMessage: String? = null,
+    onClipboardExportMessageShown: () -> Unit = {}
 ) {
     var showCopyrightDialog by remember { mutableStateOf(false) }
     var showDisclaimerDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(clipboardExportMessage) {
+        if (clipboardExportMessage != null) {
+            snackbarHostState.showSnackbar(clipboardExportMessage)
+            onClipboardExportMessageShown()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -60,7 +81,8 @@ fun SettingsScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -102,6 +124,14 @@ fun SettingsScreen(
                 updateCheckResult = updateCheckResult
             )
 
+            // 数据导入/导出
+            DataSection(
+                onImportClick = onImportClick,
+                onImportFromClipboard = onImportFromClipboard,
+                onExportClick = onExportClick,
+                onExportToClipboard = onExportToClipboard
+            )
+
             AboutSection(
                 onCopyrightClick = { showCopyrightDialog = true },
                 onDisclaimerClick = { showDisclaimerDialog = true }
@@ -132,6 +162,147 @@ fun SettingsScreen(
                     }
                 }
             )
+        }
+
+        // 导入结果提示
+        when (val result = importResult) {
+            is ImportResult.Success -> {
+                AlertDialog(
+                    onDismissRequest = onDismissImportResult,
+                    title = { Text(stringResource(R.string.settings_import_json)) },
+                    text = {
+                        Text(stringResource(R.string.import_success, result.importedCount))
+                    },
+                    confirmButton = {
+                        TextButton(onClick = onDismissImportResult) {
+                            Text(stringResource(R.string.common_confirm))
+                        }
+                    }
+                )
+            }
+            is ImportResult.Error -> {
+                AlertDialog(
+                    onDismissRequest = onDismissImportResult,
+                    title = { Text(stringResource(R.string.settings_import_json)) },
+                    text = {
+                        Text(stringResource(R.string.import_error, result.message))
+                    },
+                    confirmButton = {
+                        TextButton(onClick = onDismissImportResult) {
+                            Text(stringResource(R.string.common_confirm))
+                        }
+                    }
+                )
+            }
+            else -> {}
+        }
+    }
+}
+
+/**
+ * 数据导入/导出部分
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun DataSection(
+    onImportClick: () -> Unit,
+    onImportFromClipboard: () -> Unit,
+    onExportClick: () -> Unit,
+    onExportToClipboard: () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.settings_data_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            SegmentedListItem(
+                onClick = onImportClick,
+                shapes = ListItemDefaults.segmentedShapes(index = 0, count = 4),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.Download,
+                        contentDescription = null
+                    )
+                },
+                supportingContent = {
+                    Text(stringResource(R.string.settings_import_json_desc))
+                }
+            ) {
+                Text(stringResource(R.string.settings_import_json))
+            }
+
+            SegmentedListItem(
+                onClick = onImportFromClipboard,
+                shapes = ListItemDefaults.segmentedShapes(index = 1, count = 4),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.ContentPaste,
+                        contentDescription = null
+                    )
+                },
+                supportingContent = {
+                    Text(stringResource(R.string.settings_import_clipboard_desc))
+                }
+            ) {
+                Text(stringResource(R.string.settings_import_clipboard))
+            }
+
+            SegmentedListItem(
+                onClick = onExportClick,
+                shapes = ListItemDefaults.segmentedShapes(index = 2, count = 4),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.Upload,
+                        contentDescription = null
+                    )
+                },
+                supportingContent = {
+                    Text(stringResource(R.string.settings_export_json_desc))
+                }
+            ) {
+                Text(stringResource(R.string.settings_export_json))
+            }
+
+            SegmentedListItem(
+                onClick = onExportToClipboard,
+                shapes = ListItemDefaults.segmentedShapes(index = 3, count = 4),
+                colors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                leadingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.ContentCopy,
+                        contentDescription = null
+                    )
+                },
+                supportingContent = {
+                    Text(stringResource(R.string.settings_export_clipboard_desc))
+                }
+            ) {
+                Text(stringResource(R.string.settings_export_clipboard))
+            }
         }
     }
 }
