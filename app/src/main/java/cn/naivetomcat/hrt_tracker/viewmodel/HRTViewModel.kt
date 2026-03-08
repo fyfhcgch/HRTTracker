@@ -8,14 +8,27 @@ import cn.naivetomcat.hrt_tracker.data.MedicationPlanRepository
 import cn.naivetomcat.hrt_tracker.pk.DoseEvent
 import cn.naivetomcat.hrt_tracker.pk.Route
 import cn.naivetomcat.hrt_tracker.pk.SimulationEngine
+import cn.naivetomcat.hrt_tracker.utils.MahiroJsonFormat
 import cn.naivetomcat.hrt_tracker.utils.MedicationPlanPredictor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.UUID
+
+/**
+ * JSON 导入结果
+ */
+sealed class ImportResult {
+    data object Idle : ImportResult()
+    data object Importing : ImportResult()
+    data class Success(val importedCount: Int) : ImportResult()
+    data class Error(val message: String) : ImportResult()
+}
 
 /**
  * HRT Tracker ViewModel
@@ -104,6 +117,48 @@ class HRTViewModel(
         viewModelScope.launch {
             repository.deleteEvent(id)
         }
+    }
+
+    // JSON 导入结果状态
+    private val _importResult = MutableStateFlow<ImportResult>(ImportResult.Idle)
+    val importResult: StateFlow<ImportResult> = _importResult.asStateFlow()
+
+    /**
+     * 从 mahiro JSON 格式字符串导入用药事件
+     * @param jsonContent JSON 字符串
+     * @param onWeightImport 若 JSON 中包含体重数据，回调以更新体重设置
+     */
+    fun importFromMahiroJson(jsonContent: String, onWeightImport: ((Double) -> Unit)? = null) {
+        viewModelScope.launch {
+            _importResult.value = ImportResult.Importing
+            try {
+                val data = withContext(Dispatchers.Default) {
+                    MahiroJsonFormat.parseImport(jsonContent)
+                }
+                data.events.forEach { event ->
+                    repository.upsertEvent(event)
+                }
+                data.weight?.let { onWeightImport?.invoke(it) }
+                _importResult.value = ImportResult.Success(data.events.size)
+            } catch (e: Exception) {
+                _importResult.value = ImportResult.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    /**
+     * 重置导入结果状态为 Idle
+     */
+    fun dismissImportResult() {
+        _importResult.value = ImportResult.Idle
+    }
+
+    /**
+     * 将当前所有用药事件导出为 mahiro JSON 格式字符串
+     * @param weight 用户体重（kg），用于写入 JSON 的 weight 字段
+     */
+    fun exportToMahiroJson(weight: Double): String {
+        return MahiroJsonFormat.generateExport(weight, events.value)
     }
 
     /**

@@ -2,6 +2,8 @@ package cn.naivetomcat.hrt_tracker.navigation
 
 import android.os.SystemClock
 import android.text.format.DateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.EnterTransition
@@ -33,7 +35,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -51,6 +55,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import cn.naivetomcat.hrt_tracker.R
 import cn.naivetomcat.hrt_tracker.data.TimeFormat
@@ -59,6 +66,7 @@ import cn.naivetomcat.hrt_tracker.ui.screens.MedicationPlansScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.MedicationRecordsScreen
 import cn.naivetomcat.hrt_tracker.ui.screens.SettingsScreen
 import cn.naivetomcat.hrt_tracker.viewmodel.HRTViewModel
+import cn.naivetomcat.hrt_tracker.viewmodel.ImportResult
 import cn.naivetomcat.hrt_tracker.viewmodel.MedicationPlanViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.SettingsViewModel
 import cn.naivetomcat.hrt_tracker.viewmodel.UpdateCheckResult
@@ -83,6 +91,8 @@ fun AppNavigation(
     val uriHandler = LocalUriHandler.current
     val updateCheckResult by settingsViewModel.updateCheckResult.collectAsState()
     val userSettings by settingsViewModel.userSettings.collectAsState()
+    val importResult by hrtViewModel.importResult.collectAsState()
+    val scope = rememberCoroutineScope()
 
     // 根据用户设置和设备语言区域计算是否使用24小时制
     val is24Hour = when (userSettings.timeFormat) {
@@ -96,6 +106,42 @@ fun AppNavigation(
         try {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
         } catch (e: Exception) { "" }
+    }
+
+    // 用于导出时暂存 JSON 内容，直到文件选择器返回 URI
+    var pendingExportJson by remember { mutableStateOf<String?>(null) }
+
+    // 导入文件选择器
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch(Dispatchers.IO) {
+                val content = context.contentResolver.openInputStream(uri)
+                    ?.use { it.bufferedReader().readText() }
+                    ?: return@launch
+                hrtViewModel.importFromMahiroJson(content) { weight ->
+                    settingsViewModel.updateBodyWeight(weight)
+                }
+            }
+        }
+    }
+
+    // 导出文件选择器
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        val json = pendingExportJson
+        if (uri != null && json != null) {
+            scope.launch(Dispatchers.IO) {
+                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                    stream.write(json.toByteArray(Charsets.UTF_8))
+                }
+                pendingExportJson = null
+            }
+        } else {
+            pendingExportJson = null
+        }
     }
 
     // 应用启动时自动检查更新
@@ -292,7 +338,14 @@ fun AppNavigation(
                     onTimeFormatChange = settingsViewModel::updateTimeFormat,
                     onAutoCheckUpdatesChange = settingsViewModel::updateAutoCheckUpdates,
                     onCheckForUpdates = { settingsViewModel.checkForUpdates(versionName) },
-                    updateCheckResult = updateCheckResult
+                    updateCheckResult = updateCheckResult,
+                    onImportClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
+                    onExportClick = {
+                        pendingExportJson = hrtViewModel.exportToMahiroJson(userSettings.bodyWeight)
+                        exportLauncher.launch(context.getString(R.string.export_filename))
+                    },
+                    importResult = importResult,
+                    onDismissImportResult = hrtViewModel::dismissImportResult
                 )
             }
         }
