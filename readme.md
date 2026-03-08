@@ -1,5 +1,7 @@
 # HRT Tracker
 
+[![Build Debug APK](https://github.com/NaiveTomcat/HRTTracker/actions/workflows/apkdebug.yml/badge.svg?branch=master)](https://github.com/NaiveTomcat/HRTTracker/actions/workflows/apkdebug.yml)
+
 一款面向 Android 的 HRT（激素替代治疗）记录与雌二醇浓度趋势工具。  
 你可以用它记录每日用药、设置用药方案与提醒，并查看基于药代动力学模型生成的浓度曲线。
 
@@ -21,13 +23,22 @@
 
 ## 安装方式
 
-### 方式一：下载安装包（推荐）
+### 方式一：下载Release版本安装包（推荐）
 
 1. 打开项目 Release 页面：<https://github.com/NaiveTomcat/HRTTracker/releases>
 2. 下载最新 `apk`。
 3. 在手机上安装（如有提示，请允许“安装未知应用”）。
 
-### 方式二：自行构建（开发者）
+### 方式二：使用 GitHub Action 自动构建的 Debug 版本（测试）
+
+1. 打开项目 Actions 页面：<https://github.com/NaiveTomcat/HRTTracker/actions>
+2. 找到最近的 `Build APK Debug` 工作流，点击进入。
+3. 在 Artifacts 区域下载压缩包（形如：${{ env.date_today }} - ${{ env.playstore_name }} - ${{ env.repository_name }} - APK(s) debug generated）。
+4. 解压后安装 `app-debug.apk`。
+
+**注意**：Debug版本与Release版本的包名和签名均不一致，两者可以共存，但数据不互通。
+
+### 方式三：自行构建（开发者）
 
 ```bash
 ./gradlew assembleRelease
@@ -35,7 +46,7 @@
 
 生成的安装包通常位于：
 
-`app/build/outputs/apk/release/`
+`app/release/app-release.apk`
 
 ## 快速上手
 
