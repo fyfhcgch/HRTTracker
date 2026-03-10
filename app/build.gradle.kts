@@ -48,7 +48,7 @@ android {
         applicationId = "cn.naivetomcat.hrt_tracker"
         minSdk = 31
         targetSdk = 36
-        versionCode = 10040
+        versionCode = 10050
         versionName = "git describe --tags --always --dirty=-dev".runCommand(workingDir = rootDir)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
