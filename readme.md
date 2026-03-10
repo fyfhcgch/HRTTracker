@@ -88,3 +88,7 @@
 ## 免责声明
 
 本应用仅用于学习、研究与个人记录，不提供诊断或治疗建议。任何医疗相关决策请咨询具备资质的医疗专业人士。
+
+## 请我喝粉魔爪
+
+<img width="1153" height="1153" alt="1000010734" src="https://github.com/user-attachments/assets/b40e595d-fe5c-4dfd-a3f6-bccdda109b6b" />
