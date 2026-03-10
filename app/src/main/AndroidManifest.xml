@@ -40,6 +40,29 @@
             android:name=".reminder.MedicationReminderReceiver"
             android:enabled="true"
             android:exported="false" />
+
+        <!-- HRT Tracker 组合微件（用药提醒 + 快速添加） -->
+        <receiver
+            android:name=".widget.HRTTrackerWidgetReceiver"
+            android:label="@string/widget_combined_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hrt_tracker_widget_info" />
+        </receiver>
+
+        <!-- 微件配置 Activity -->
+        <activity
+            android:name=".widget.HRTTrackerWidgetConfigActivity"
+            android:exported="true"
+            android:theme="@style/Theme.HRTTracker">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
