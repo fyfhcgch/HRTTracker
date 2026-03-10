@@ -38,6 +38,9 @@ import cn.naivetomcat.hrt_tracker.data.UserSettings
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
 import cn.naivetomcat.hrt_tracker.viewmodel.ImportResult
 import cn.naivetomcat.hrt_tracker.viewmodel.UpdateCheckResult
+import kotlinx.coroutines.launch
+
+private const val CLIPBOARD_LABEL_VERSION = "version"
 
 /**
  * 设置页面
@@ -122,7 +125,8 @@ fun SettingsScreen(
                 autoCheckUpdates = settings.autoCheckUpdates,
                 onAutoCheckUpdatesChange = onAutoCheckUpdatesChange,
                 onCheckForUpdates = onCheckForUpdates,
-                updateCheckResult = updateCheckResult
+                updateCheckResult = updateCheckResult,
+                snackbarHostState = snackbarHostState
             )
 
             // 数据导入/导出
@@ -583,7 +587,8 @@ private fun UpdateSection(
     autoCheckUpdates: Boolean,
     onAutoCheckUpdatesChange: (Boolean) -> Unit,
     onCheckForUpdates: () -> Unit,
-    updateCheckResult: UpdateCheckResult
+    updateCheckResult: UpdateCheckResult,
+    snackbarHostState: SnackbarHostState
 ) {
     val context = LocalContext.current
     val currentVersion = remember(context) {
@@ -591,13 +596,19 @@ private fun UpdateSection(
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
         }.getOrNull().orEmpty()
     }
+    val scope = rememberCoroutineScope()
     val isChecking = updateCheckResult is UpdateCheckResult.Checking
     val checkingStatusText = when (updateCheckResult) {
         is UpdateCheckResult.Checking -> stringResource(R.string.update_checking)
         is UpdateCheckResult.UpToDate -> stringResource(R.string.update_up_to_date)
         is UpdateCheckResult.Error -> stringResource(R.string.update_check_error)
-        else -> null
+        is UpdateCheckResult.UpdateAvailable -> stringResource(R.string.update_available_hint, updateCheckResult.tagName)
+        is UpdateCheckResult.UpdateAvailableDismissed -> stringResource(R.string.update_available_hint, updateCheckResult.tagName)
+        is UpdateCheckResult.DebugBuild -> stringResource(R.string.update_debug_hint, updateCheckResult.tagName)
+        is UpdateCheckResult.DebugBuildDismissed -> stringResource(R.string.update_debug_hint, updateCheckResult.tagName)
+        else -> stringResource(R.string.update_idle_hint)
     }
+    val versionCopiedText = stringResource(R.string.version_copied)
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -678,7 +689,13 @@ private fun UpdateSection(
             }
 
             SegmentedListItem(
-                onClick = {},
+                onClick = {
+                    val clipboardManager =
+                        context.getSystemService(android.content.ClipboardManager::class.java)
+                    val clip = android.content.ClipData.newPlainText(CLIPBOARD_LABEL_VERSION, currentVersion)
+                    clipboardManager?.setPrimaryClip(clip)
+                    scope.launch { snackbarHostState.showSnackbar(versionCopiedText) }
+                },
                 shapes = ListItemDefaults.segmentedShapes(index = 2, count = 3),
                 colors = ListItemDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -688,6 +705,13 @@ private fun UpdateSection(
                     Icon(
                         imageVector = Icons.Outlined.PhoneAndroid,
                         contentDescription = null
+                    )
+                },
+                trailingContent = {
+                    Icon(
+                        imageVector = Icons.Outlined.ContentCopy,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 supportingContent = {
