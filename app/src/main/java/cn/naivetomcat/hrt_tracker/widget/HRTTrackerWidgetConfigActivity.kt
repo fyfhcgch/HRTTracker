@@ -49,7 +49,11 @@ import androidx.lifecycle.lifecycleScope
 import cn.naivetomcat.hrt_tracker.data.AppDatabase
 import cn.naivetomcat.hrt_tracker.data.MedicationPlan
 import cn.naivetomcat.hrt_tracker.data.displayName
+import cn.naivetomcat.hrt_tracker.pk.AntiAndrogen
+import cn.naivetomcat.hrt_tracker.pk.DoseEvent
 import cn.naivetomcat.hrt_tracker.pk.Route
+import cn.naivetomcat.hrt_tracker.pk.displayName as antiAndrogenDisplayName
+import cn.naivetomcat.hrt_tracker.ui.icons.TablerGenderAndrogyne
 import cn.naivetomcat.hrt_tracker.ui.theme.HRTTrackerTheme
 import cn.naivetomcat.hrt_tracker.widget.WidgetUtils.routeDisplayName
 import kotlinx.coroutines.flow.first
@@ -202,8 +206,16 @@ private fun PlanConfigItem(
             )
         },
         supportingContent = {
+            val medicationName = if (plan.route == Route.ANTIANDROGEN) {
+                val aaType = plan.extras[DoseEvent.ExtraKey.ANTI_ANDROGEN_TYPE]?.toInt()?.let {
+                    AntiAndrogen.values().getOrElse(it) { AntiAndrogen.CPA }
+                } ?: AntiAndrogen.CPA
+                aaType.antiAndrogenDisplayName
+            } else {
+                plan.ester.displayName
+            }
             Text(
-                text = "${plan.doseMG}mg · ${plan.ester.displayName} · ${routeDisplayName(plan.route)}",
+                text = "${plan.doseMG}mg · $medicationName · ${routeDisplayName(plan.route)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -218,4 +230,5 @@ private fun routeIconForConfig(route: Route) = when (route) {
     Route.GEL -> Icons.Filled.Soap
     Route.PATCH_APPLY -> Icons.Filled.AddBox
     Route.PATCH_REMOVE -> Icons.Filled.RemoveCircle
+    Route.ANTIANDROGEN -> TablerGenderAndrogyne
 }
