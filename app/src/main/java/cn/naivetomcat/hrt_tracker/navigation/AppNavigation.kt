@@ -22,12 +22,12 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.MedicalServices
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
@@ -437,8 +437,8 @@ private fun BottomNavigationBar(
         ),
         BottomNavItem(
             screen = Screen.RECORDS,
-            selectedIcon = Icons.Filled.List,
-            unselectedIcon = Icons.Outlined.List,
+            selectedIcon = Icons.AutoMirrored.Filled.List,
+            unselectedIcon = Icons.AutoMirrored.Outlined.List,
             label = stringResource(R.string.nav_records)
         ),
         BottomNavItem(

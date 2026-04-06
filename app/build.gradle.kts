@@ -42,6 +42,12 @@ android {
             keyAlias = "DEBUG"
             keyPassword = "DEBUG1"
         }
+        create("release") {
+            storeFile = file("releasekeystore.jks")
+            storePassword = "RELEASE1"
+            keyAlias = "RELEASE"
+            keyPassword = "RELEASE1"
+        }
     }
 
     defaultConfig {
@@ -49,7 +55,7 @@ android {
         minSdk = 31
         targetSdk = 36
         versionCode = 10060
-        versionName = "git describe --tags --always --dirty=-dev".runCommand(workingDir = rootDir)
+        versionName = "v1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -59,16 +65,28 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             applicationIdSuffix = ".release"
+            signingConfig = signingConfigs.getByName("release")
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+    packaging {
+        jniLibs {
+            pickFirsts += listOf(
+                "lib/arm64-v8a/libandroidx.graphics.path.so",
+                "lib/armeabi-v7a/libandroidx.graphics.path.so",
+                "lib/x86/libandroidx.graphics.path.so",
+                "lib/x86_64/libandroidx.graphics.path.so"
+            )
         }
     }
     compileOptions {

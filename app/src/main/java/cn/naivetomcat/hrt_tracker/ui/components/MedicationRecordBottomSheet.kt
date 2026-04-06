@@ -401,8 +401,8 @@ fun MedicationRecordBottomSheet(
                     datePickerState.selectedDateMillis?.let { millis ->
                         val calendar = Calendar.getInstance().apply {
                             timeInMillis = millis
-                            set(Calendar.HOUR_OF_DAY, selectedDateTime.hours)
-                            set(Calendar.MINUTE, selectedDateTime.minutes)
+                            set(Calendar.HOUR_OF_DAY, selectedDateTime.toInstant().atZone(java.time.ZoneId.systemDefault()).hour)
+                            set(Calendar.MINUTE, selectedDateTime.toInstant().atZone(java.time.ZoneId.systemDefault()).minute)
                         }
                         selectedDateTime = calendar.time
                     }
@@ -424,8 +424,8 @@ fun MedicationRecordBottomSheet(
     // Time Picker
     if (showTimePicker) {
         val timePickerState = rememberTimePickerState(
-            initialHour = selectedDateTime.hours,
-            initialMinute = selectedDateTime.minutes,
+            initialHour = selectedDateTime.toInstant().atZone(java.time.ZoneId.systemDefault()).hour,
+            initialMinute = selectedDateTime.toInstant().atZone(java.time.ZoneId.systemDefault()).minute,
             is24Hour = is24Hour
         )
         AlertDialog(

@@ -544,8 +544,21 @@ fun ConcentrationChart(
         val visibleTimeStart = timeMin - (offsetX / (chartWidth * scaleX)) * (timeMax - timeMin)
         val visibleTimeEnd = visibleTimeStart + (timeMax - timeMin) / scaleX
         
-        for (i in 0..5) {
-            val timeValue = visibleTimeStart + (visibleTimeEnd - visibleTimeStart) * i / 5
+        // 估算标签宽度，动态计算合适的标签数量
+        val sampleText = "00/00 00:00"
+        val sampleTextLayout = textMeasurer.measure(
+            text = sampleText,
+            style = TextStyle(fontSize = 10.sp)
+        )
+        val labelWidth = sampleTextLayout.size.width
+        val minLabelSpacing = 8.dp.toPx() // 标签之间的最小间距
+        val totalLabelWidth = labelWidth + minLabelSpacing
+        
+        // 计算最多能显示多少个标签
+        val maxLabels = (chartWidth / totalLabelWidth).toInt().coerceIn(2, 6)
+        
+        for (i in 0..maxLabels) {
+            val timeValue = visibleTimeStart + (visibleTimeEnd - visibleTimeStart) * i / maxLabels
             // 从时间值计算屏幕坐标
             val normalizedPos = ((timeValue - timeMin) / (timeMax - timeMin)).toFloat()
             val x = chartLeft + normalizedPos * chartWidth * scaleX + offsetX

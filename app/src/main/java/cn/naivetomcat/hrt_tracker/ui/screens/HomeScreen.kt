@@ -85,10 +85,8 @@ private fun HomeScreenContent(
     }
 
     // 计算实时当前浓度值（通过线性插值）
-    val realtimeCurrentConcentration = if (pkState.simulationResult != null) {
-        calculateConcentrationAtTime(pkState.simulationResult!!, realtimeCurrentTimeH)
-    } else {
-        null
+    val realtimeCurrentConcentration = pkState.simulationResult?.let {
+        calculateConcentrationAtTime(it, realtimeCurrentTimeH)
     }
 
     // 检查是否需要重新运行模拟
@@ -213,14 +211,16 @@ private fun HomeScreenContent(
                     )
 
                     // 图表卡片
-                    ChartCard(
-                        simulationResult = pkState.simulationResult!!,
-                        baselineSimulationResult = pkState.baselineSimulationResult,
-                        currentTimeH = realtimeCurrentTimeH,
-                        doseTimePoints = doseTimePoints,
-                        forkPointTimeH = forkPointTimeH,
-                        is24Hour = is24Hour
-                    )
+                    pkState.simulationResult?.let { simulationResult ->
+                        ChartCard(
+                            simulationResult = simulationResult,
+                            baselineSimulationResult = pkState.baselineSimulationResult,
+                            currentTimeH = realtimeCurrentTimeH,
+                            doseTimePoints = doseTimePoints,
+                            forkPointTimeH = forkPointTimeH,
+                            is24Hour = is24Hour
+                        )
+                    }
 
                     // 浓度等级说明
                     ConcentrationLevelGuide()
@@ -265,27 +265,20 @@ private fun CurrentConcentrationCard(
                 text = stringResource(R.string.home_current_concentration),
                 style = MaterialTheme.typography.titleMedium
             )
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = if (concentration != null) {
-                        "%.1f pg/mL".format(concentration)
-                    } else {
-                        stringResource(R.string.home_concentration_placeholder)
-                    },
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Text(
-                    text = getConcentrationLevelText(tempPkState.getConcentrationLevelColor()),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            Text(
+                text = if (concentration != null) {
+                    "%.1f pg/mL".format(concentration)
+                } else {
+                    stringResource(R.string.home_concentration_placeholder)
+                },
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = getConcentrationLevelText(tempPkState.getConcentrationLevelColor()),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
